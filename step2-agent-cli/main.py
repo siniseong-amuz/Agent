@@ -1,5 +1,5 @@
 from typing import TypedDict
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph
 from langchain_google_genai import ChatGoogleGenerativeAI
 import json, os
 from dotenv import load_dotenv
@@ -14,7 +14,6 @@ class GraphState(TypedDict):
     title: str
     intent: str
     translation_result: dict
-    final_output: dict
   
 builder = StateGraph(GraphState)
 builder.add_node("translation", get_translation_node(llm))

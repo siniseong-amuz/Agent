@@ -17,15 +17,12 @@ def get_translation_node(llm) -> RunnableLambda:
         original_text = input_state["input"]
 
         prompt = f"""
-        아래 문장을 자연스럽게 영어로 번역해줘:
-        "{original_text}"
-
-        번역 결과를 아래 포맷으로 작성해줘:
-
+        아래 문장을 자연스럽게 영어로 번역해줘
+        {original_text}
         {format_instructions}
-        """
+        """.strip()
 
-        response = llm.invoke([HumanMessage(content=prompt.strip())])
+        response = llm.invoke([HumanMessage(content=prompt)])
 
         try:
             parsed = parser.parse(response.content)
