@@ -13,7 +13,7 @@ class GraphState(TypedDict):
     input: str
     title: str
     intent: str
-    translation_result: dict
+    result: dict
   
 builder = StateGraph(GraphState)
 builder.add_node("translation", get_translation_node(llm))

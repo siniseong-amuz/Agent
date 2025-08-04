@@ -40,8 +40,8 @@ def get_translation_node(llm) -> RunnableLambda:
         return {
             "input": original_text,
             "title": parsed.title,
-            "intent": "translation",
-            "translation_result": {
+            "intent": "번역(translation)",
+            "result": {
                 "original": parsed.original,
                 "translated": parsed.translated
             }
