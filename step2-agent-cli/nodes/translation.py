@@ -1,4 +1,4 @@
-from langchain_core.messages import HumanMessage
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel
@@ -12,17 +12,21 @@ class TranslationOutput(BaseModel):
 parser = PydanticOutputParser(pydantic_object=TranslationOutput)
 format_instructions = parser.get_format_instructions()
 
+prompt = ChatPromptTemplate.from_messages([
+    ("system", 
+     "{format_instructions}"
+    ),
+    ("human", "다음 문장을 번역해주세요: {original_text}")
+])
+
 def get_translation_node(llm) -> RunnableLambda:
     def _translate(input_state: Dict) -> Dict:
         original_text = input_state["input"]
-
-        prompt = f"""
-        아래 문장을 자연스럽게 영어로 번역해줘
-        {original_text}
-        {format_instructions}
-        """.strip()
-
-        response = llm.invoke([HumanMessage(content=prompt)])
+        chain = prompt | llm
+        response = chain.invoke({
+            "original_text": original_text,
+            "format_instructions": format_instructions
+        })
 
         try:
             parsed = parser.parse(response.content)
