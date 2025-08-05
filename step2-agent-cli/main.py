@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from nodes.translation import get_translation_node
 from nodes.emotion import get_emotion_node
 from nodes.intent import get_intent_node
+from nodes.timezone import get_timezone_node
 
 load_dotenv()
 
@@ -23,7 +24,8 @@ def route(state: GraphState) -> str:
     intent = state.get("intent_result", "unknown")
     routing_map = {
         "translation": "translation",
-        "emotion": "emotion"
+        "emotion": "emotion",
+        "timezone": "timezone"
     }
     return routing_map.get(intent, "translation")
 
@@ -31,18 +33,21 @@ builder = StateGraph(GraphState)
 builder.add_node("intent", get_intent_node(llm))
 builder.add_node("translation", get_translation_node(llm))
 builder.add_node("emotion", get_emotion_node(llm))
+builder.add_node("timezone", get_timezone_node(llm))
 builder.set_entry_point("intent")
 builder.add_conditional_edges(
     "intent",
     route,
     {
         "translation": "translation",
-        "emotion": "emotion"
+        "emotion": "emotion",
+        "timezone": "timezone"
     }
 )
 
 builder.set_finish_point("translation")
 builder.set_finish_point("emotion")
+builder.set_finish_point("timezone")
 
 graph = builder.compile()
 
