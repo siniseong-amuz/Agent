@@ -16,7 +16,7 @@ prompt = ChatPromptTemplate.from_messages([
     ("system", 
      "{format_instructions}"
     ),
-    ("human", "다음 문장을 번역해주세요: {original_text}")
+    ("human", "사용자 요청: {original_text}")
 ])
 
 def get_translation_node(llm) -> RunnableLambda:
@@ -40,7 +40,7 @@ def get_translation_node(llm) -> RunnableLambda:
         return {
             "input": original_text,
             "title": parsed.title,
-            "intent": "번역(translation)",
+            "intent": "번역",
             "result": {
                 "original": parsed.original,
                 "translated": parsed.translated

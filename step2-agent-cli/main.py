@@ -4,6 +4,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 import json, os
 from dotenv import load_dotenv
 from nodes.translation import get_translation_node
+from nodes.emotion import get_emotion_node
+from nodes.intent import get_intent_node
 
 load_dotenv()
 
@@ -14,11 +16,34 @@ class GraphState(TypedDict):
     title: str
     intent: str
     result: dict
+    intent_result: str
+    confidence: float
+
+def route(state: GraphState) -> str:
+    intent = state.get("intent_result", "unknown")
+    routing_map = {
+        "translation": "translation",
+        "emotion": "emotion"
+    }
+    return routing_map.get(intent, "translation")
 
 builder = StateGraph(GraphState)
+builder.add_node("intent", get_intent_node(llm))
 builder.add_node("translation", get_translation_node(llm))
-builder.set_entry_point("translation")
+builder.add_node("emotion", get_emotion_node(llm))
+builder.set_entry_point("intent")
+builder.add_conditional_edges(
+    "intent",
+    route,
+    {
+        "translation": "translation",
+        "emotion": "emotion"
+    }
+)
+
 builder.set_finish_point("translation")
+builder.set_finish_point("emotion")
+
 graph = builder.compile()
 
 while True:
@@ -28,4 +53,5 @@ while True:
         break
 
     result = graph.invoke({"input": ques})
-    print(json.dumps(result, indent=2, ensure_ascii=False))
+    output_result = {k: v for k, v in result.items() if k not in ["intent_result", "confidence"]} # 파이썬 딕셔너리 컴프리헨션 문법 k = 키, v = 값
+    print(json.dumps(output_result, indent=2, ensure_ascii=False))

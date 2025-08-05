@@ -1,6 +1,6 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
-from langchain_core.output_parsers import PydanticOutputParser
+from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel
 from typing import Dict
 
@@ -18,6 +18,7 @@ prompt = ChatPromptTemplate.from_messages([
     ),
     ("human", "다음 문장의 감정을 분석해주세요: {original_text}")
 ])
+
 def get_emotion_node(llm) -> RunnableLambda:
     def _emotion(input_state: Dict) -> Dict:
         original_text = input_state["input"]
@@ -39,7 +40,7 @@ def get_emotion_node(llm) -> RunnableLambda:
         return {
             "input": original_text,
             "title": parsed.title,
-            "intent": "감정 분석(emotion_analysis)",
+            "intent": "감정 분석",
             "result": {
                 "emotion": parsed.emotion,
                 "confidence": parsed.confidence
