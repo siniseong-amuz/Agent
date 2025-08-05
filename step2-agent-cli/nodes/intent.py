@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import Dict, Literal
 
 class IntentOutput(BaseModel):
-    intent: Literal["translation", "emotion", "timezone", "unknown"]
+    intent: Literal["translation", "emotion", "timezone", "flight", "unknown"]
     confidence: float
 
 parser = PydanticOutputParser(pydantic_object=IntentOutput)
@@ -17,6 +17,7 @@ prompt = ChatPromptTemplate.from_messages([
      "translation: 언어 번역이나 변환을 원하는 경우"
      "emotion: 감정 상태나 기분을 분석하길 원하는 경우"
      "timezone: 국가 간 시차를 계산하거나 묻는 경우"
+     "flight: 국가/도시 간 비행시간을 묻는 경우"
      
      "{format_instructions}"
     ),
