@@ -4,44 +4,44 @@ from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel
 from typing import Dict
 
-class SummaryOutput(BaseModel):
+class TalkOutput(BaseModel):
     title: str
-    summary: str
+    response: str
 
-parser = PydanticOutputParser(pydantic_object=SummaryOutput)
+parser = PydanticOutputParser(pydantic_object=TalkOutput)
 format_instructions = parser.get_format_instructions()
 
 prompt = ChatPromptTemplate.from_messages([
     ("system",
      "{format_instructions}"
     ),
-    ("human", "문장 요약: {original_text}")
+    ("human", "{user_input}")
 ])
 
-def get_summary_node(llm) -> RunnableLambda:
-    def _summary(input_state: Dict) -> Dict:
-        original_text = input_state["input"]
+def get_talk_node(llm) -> RunnableLambda:
+    def _talk(input_state: Dict) -> Dict:
+        user_input = input_state["input"]
         chain = prompt | llm
         response = chain.invoke({
-            "original_text": original_text,
+            "user_input": user_input,
             "format_instructions": format_instructions
         })
 
         try:
             parsed = parser.parse(response.content)
         except Exception:
-            parsed = SummaryOutput(
-                title="요약 결과",
-                summary=summary_text
+            parsed = TalkOutput(
+                title="일상대화",
+                response=response.content
             )
 
         return {
-            "input": original_text,
+            "input": user_input,
             "title": parsed.title,
-            "intent": "문장 요약",
+            "intent": "일상대화",
             "result": {
-                "summary": parsed.summary
+                "response": parsed.response
             }
         }
 
-    return RunnableLambda(_summary)
+    return RunnableLambda(_talk)
