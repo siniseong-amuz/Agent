@@ -10,10 +10,12 @@ from nodes.timezone import get_timezone_node
 from nodes.flight import get_flight_node
 from nodes.summary import get_summary_node
 from nodes.talk import get_talk_node
+from history import HistoryManager
 
 load_dotenv()
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=os.getenv("GEMINI_API_KEY"), temperature=0)
+history_manager = HistoryManager()
 
 class GraphState(TypedDict):
     input: str
@@ -22,6 +24,7 @@ class GraphState(TypedDict):
     result: dict
     intent_result: str
     confidence: float
+    history: str
 
 def route(state: GraphState) -> str:
     intent = state.get("intent_result", "unknown")
@@ -31,7 +34,7 @@ def route(state: GraphState) -> str:
         "timezone": "timezone",
         "flight": "flight",
         "summary": "summary",
-        "conversation": "talk"
+        "history": "talk"
     }
     return routing_map.get(intent, "translation")
 
@@ -53,7 +56,7 @@ builder.add_conditional_edges(
         "timezone": "timezone",
         "flight": "flight",
         "summary": "summary",
-        "conversation": "talk"
+        "history": "talk"
     }
 )
 
@@ -72,6 +75,28 @@ while True:
         print("대화를 종료합니다.")
         break
 
-    result = graph.invoke({"input": ques})
-    output_result = {k: v for k, v in result.items() if k not in ["intent_result", "confidence"]} # 파이썬 딕셔너리 컴프리헨션 문법 k = 키, v = 값
+
+    history_context = history_manager.get_recent_context(3)
+    
+    result = graph.invoke({
+        "input": ques,
+        "history": history_context
+    })
+
+    ai_response = ""
+    if result.get("result"):
+        if "response" in result["result"]:
+            ai_response = result["result"]["response"]
+        elif "summary" in result["result"]:
+            ai_response = result["result"]["summary"]
+        else:
+            ai_response = str(result["result"])
+    history_manager.add_history(
+        user_input=ques,
+        ai_response=ai_response,
+        intent=result.get("intent", ""),
+        title=result.get("title", "")
+    )
+    
+    output_result = {k: v for k, v in result.items() if k not in ["intent_result", "confidence", "history"]} # 파이썬 딕셔너리 컴프리헨션 문법 k = 키, v = 값
     print(json.dumps(output_result, indent=2, ensure_ascii=False))

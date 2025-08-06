@@ -13,7 +13,10 @@ format_instructions = parser.get_format_instructions()
 
 prompt = ChatPromptTemplate.from_messages([
     ("system",
-     "{format_instructions}"
+     """{format_instructions}
+
+    이전 대화 맥락:
+    {history}"""
     ),
     ("human", "문장 요약: {original_text}")
 ])
@@ -21,9 +24,11 @@ prompt = ChatPromptTemplate.from_messages([
 def get_summary_node(llm) -> RunnableLambda:
     def _summary(input_state: Dict) -> Dict:
         original_text = input_state["input"]
+        history_context = input_state.get("history", "")
         chain = prompt | llm
         response = chain.invoke({
             "original_text": original_text,
+            "history": history_context,
             "format_instructions": format_instructions
         })
 
