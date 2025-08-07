@@ -94,8 +94,7 @@ while True:
     history_manager.add_history(
         user_input=ques,
         response=ai_response,
-        intent=result.get("intent", ""),
-        title=result.get("title", "")
+        intent=result.get("intent", "")
     )
     
     output_result = {k: v for k, v in result.items() if k not in ["intent_result", "confidence", "history"]} # 파이썬 딕셔너리 컴프리헨션 문법 k = 키, v = 값

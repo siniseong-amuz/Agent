@@ -10,12 +10,11 @@ class HistoryManager:
         self.history_data: List[Dict[str, Any]] = []
         self.load_history()
     
-    def add_history(self, user_input: str, response: str, intent: str, title: str):
+    def add_history(self, user_input: str, response: str, intent: str):
         history_entry = {
             "user_input": user_input,
             "response": response,
-            "intent": intent,
-            "title": title
+            "intent": intent
         }
         
         self.history_data.append(history_entry)
