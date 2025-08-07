@@ -37,7 +37,7 @@ def get_summary_node(llm) -> RunnableLambda:
         except Exception:
             parsed = SummaryOutput(
                 title="요약 결과",
-                summary=summary_text
+                summary=response.content.strip()
             )
 
         return {
