@@ -10,11 +10,10 @@ class HistoryManager:
         self.history_data: List[Dict[str, Any]] = []
         self.load_history()
     
-    def add_history(self, user_input: str, ai_response: str, intent: str, title: str):
+    def add_history(self, user_input: str, response: str, intent: str, title: str):
         history_entry = {
-            "timestamp": datetime.now().isoformat(),
             "user_input": user_input,
-            "ai_response": ai_response,
+            "response": response,
             "intent": intent,
             "title": title
         }
@@ -35,13 +34,13 @@ class HistoryManager:
         
         for entry in recent_entries:
             context_parts.append(f"사용자: {entry['user_input']}")
-            context_parts.append(f"AI: {entry['ai_response']}")
+            context_parts.append(f"AI: {entry['response']}")
         
         return "\n".join(context_parts)
     
-    def get_last_ai_response(self) -> str:
+    def get_last_response(self) -> str:
         if self.history_data:
-            return self.history_data[-1]['ai_response']
+            return self.history_data[-1]['response']
         return ""
     
     def get_history_data(self) -> List[Dict[str, Any]]:

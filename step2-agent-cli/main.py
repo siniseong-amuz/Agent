@@ -93,7 +93,7 @@ while True:
             ai_response = str(result["result"])
     history_manager.add_history(
         user_input=ques,
-        ai_response=ai_response,
+        response=ai_response,
         intent=result.get("intent", ""),
         title=result.get("title", "")
     )
