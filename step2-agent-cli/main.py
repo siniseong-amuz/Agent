@@ -34,9 +34,9 @@ def route(state: GraphState) -> str:
         "timezone": "timezone",
         "flight": "flight",
         "summary": "summary",
-        "history": "talk"
+        "talk": "talk"
     }
-    return routing_map.get(intent, "translation")
+    return routing_map.get(intent, "talk")
 
 builder = StateGraph(GraphState)
 builder.add_node("intent", get_intent_node(llm))
@@ -56,7 +56,7 @@ builder.add_conditional_edges(
         "timezone": "timezone",
         "flight": "flight",
         "summary": "summary",
-        "history": "talk"
+        "talk": "talk"
     }
 )
 

@@ -13,7 +13,9 @@ format_instructions = parser.get_format_instructions()
 
 prompt = ChatPromptTemplate.from_messages([
     ("system",
-     """{format_instructions}
+     """자연스럽게 대화하세요.
+
+    {format_instructions}
 
     이전 대화 맥락:
     {history}"""

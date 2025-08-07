@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import Dict, Literal
 
 class IntentOutput(BaseModel):
-    intent: Literal["translation", "emotion", "timezone", "flight", "summary", "unknown"]
+    intent: Literal["translation", "emotion", "timezone", "flight", "summary", "talk", "unknown"]
     confidence: float
 
 parser = PydanticOutputParser(pydantic_object=IntentOutput)
@@ -21,6 +21,7 @@ prompt = ChatPromptTemplate.from_messages([
      timezone: 국가 간 시차를 계산하거나 묻는 경우
      flight: 국가/도시 간 비행시간을 묻는 경우
      summary: 텍스트나 내용을 요약하길 원하는 경우
+     talk: 일상 대화, 질문, 등 대화형 상호작용을 원하는 경우
      
      이전 대화 맥락: {history}
      
@@ -44,7 +45,7 @@ def get_intent_node(llm) -> RunnableLambda:
             parsed = parser.parse(response.content)
         except Exception:
             parsed = IntentOutput(
-                intent="translation",
+                intent="talk",
                 confidence=0.5
             )
 
