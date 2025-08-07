@@ -59,7 +59,6 @@ builder.add_conditional_edges(
         "talk": "talk"
     }
 )
-
 builder.set_finish_point("translation")
 builder.set_finish_point("emotion")
 builder.set_finish_point("timezone")
@@ -68,13 +67,13 @@ builder.set_finish_point("summary")
 builder.set_finish_point("talk")
 
 graph = builder.compile()
+history_manager.start_new_session()
 
 while True:
     ques = input("질문을 입력하세요 (종료 q 또는 exit): ").strip()
     if ques.lower() in {"q", "exit"}:
         print("대화를 종료합니다.")
         break
-
 
     history_context = history_manager.get_recent_context(3)
     
@@ -91,6 +90,7 @@ while True:
             ai_response = result["result"]["summary"]
         else:
             ai_response = str(result["result"])
+    
     history_manager.add_history(
         input=ques,
         response=ai_response,
