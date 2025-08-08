@@ -14,7 +14,7 @@ from history import HistoryManager
 
 load_dotenv()
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=os.getenv("GEMINI_API_KEY"), temperature=0)
+llm = ChatGoogleGenerativeAI( model="gemini-2.0-flash", google_api_key=os.getenv("GEMINI_API_KEY"), temperature=0)
 history_manager = HistoryManager()
 
 class GraphState(TypedDict):
@@ -26,17 +26,17 @@ class GraphState(TypedDict):
     confidence: float
     history: str
 
+ROUTING_MAP = {
+    "translation": "translation",
+    "emotion": "emotion",
+    "timezone": "timezone",
+    "flight": "flight",
+    "summary": "summary",
+    "talk": "talk"
+}
+
 def route(state: GraphState) -> str:
-    intent = state.get("intent_result", "unknown")
-    routing_map = {
-        "translation": "translation",
-        "emotion": "emotion",
-        "timezone": "timezone",
-        "flight": "flight",
-        "summary": "summary",
-        "talk": "talk"
-    }
-    return routing_map.get(intent, "talk")
+    return ROUTING_MAP.get(state.get("intent_result", "unknown"), "talk")
 
 builder = StateGraph(GraphState)
 builder.add_node("intent", get_intent_node(llm))
@@ -47,24 +47,11 @@ builder.add_node("flight", get_flight_node(llm))
 builder.add_node("summary", get_summary_node(llm))
 builder.add_node("talk", get_talk_node(llm))
 builder.set_entry_point("intent")
-builder.add_conditional_edges(
-    "intent",
-    route,
-    {
-        "translation": "translation",
-        "emotion": "emotion",
-        "timezone": "timezone",
-        "flight": "flight",
-        "summary": "summary",
-        "talk": "talk"
-    }
-)
-builder.set_finish_point("translation")
-builder.set_finish_point("emotion")
-builder.set_finish_point("timezone")
-builder.set_finish_point("flight")
-builder.set_finish_point("summary")
-builder.set_finish_point("talk")
+
+builder.add_conditional_edges("intent", route, ROUTING_MAP)
+
+for node in ROUTING_MAP.values():
+    builder.set_finish_point(node)
 
 graph = builder.compile()
 history_manager.start_new_session()
@@ -76,26 +63,27 @@ while True:
         break
 
     history_context = history_manager.get_recent_context(3)
-    
     result = graph.invoke({
         "input": ques,
         "history": history_context
     })
 
-    ai_response = ""
-    if result.get("result"):
-        if "response" in result["result"]:
-            ai_response = result["result"]["response"]
-        elif "summary" in result["result"]:
-            ai_response = result["result"]["summary"]
-        else:
-            ai_response = str(result["result"])
-    
+    res_data = result.get("result", {})
+    if "response" in res_data:
+        ai_response = res_data["response"]
+    elif "summary" in res_data:
+        ai_response = res_data["summary"]
+    else:
+        ai_response = str(res_data)
+
     history_manager.add_history(
         input=ques,
         response=ai_response,
         intent=result.get("intent", "")
     )
     
-    output_result = {k: v for k, v in result.items() if k not in ["intent_result", "confidence", "history"]} # 파이썬 딕셔너리 컴프리헨션 문법 k = 키, v = 값
+    output_result = {
+        k: v for k, v in result.items()
+        if k not in ["intent_result", "confidence", "history"]
+    }
     print(json.dumps(output_result, indent=2, ensure_ascii=False))
