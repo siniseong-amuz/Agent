@@ -1,8 +1,10 @@
+import os
+import json
 from typing import TypedDict
+from dotenv import load_dotenv
 from langgraph.graph import StateGraph
 from langchain_google_genai import ChatGoogleGenerativeAI
-import json, os
-from dotenv import load_dotenv
+from history import HistoryManager
 from nodes.translation import get_translation_node
 from nodes.emotion import get_emotion_node
 from nodes.intent import get_intent_node
@@ -10,12 +12,8 @@ from nodes.timezone import get_timezone_node
 from nodes.flight import get_flight_node
 from nodes.summary import get_summary_node
 from nodes.talk import get_talk_node
-from history import HistoryManager
 
 load_dotenv()
-
-llm = ChatGoogleGenerativeAI( model="gemini-2.0-flash", google_api_key=os.getenv("GEMINI_API_KEY"), temperature=0)
-history_manager = HistoryManager()
 
 class GraphState(TypedDict):
     input: str
@@ -38,6 +36,13 @@ ROUTING_MAP = {
 def route(state: GraphState) -> str:
     return ROUTING_MAP.get(state.get("intent_result", "unknown"), "talk")
 
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",
+    google_api_key=os.getenv("GEMINI_API_KEY"),
+    temperature=0
+)
+history_manager = HistoryManager()
+
 builder = StateGraph(GraphState)
 builder.add_node("intent", get_intent_node(llm))
 builder.add_node("translation", get_translation_node(llm))
@@ -47,7 +52,6 @@ builder.add_node("flight", get_flight_node(llm))
 builder.add_node("summary", get_summary_node(llm))
 builder.add_node("talk", get_talk_node(llm))
 builder.set_entry_point("intent")
-
 builder.add_conditional_edges("intent", route, ROUTING_MAP)
 
 for node in ROUTING_MAP.values():
@@ -63,22 +67,14 @@ while True:
         break
 
     history_context = history_manager.get_recent_context(3)
-
+    
     result = graph.invoke({
         "input": ques,
         "history": history_context
     })
-
-    res_data = result.get("result", {})
-    if "response" in res_data:
-        ai_response = res_data["response"]
-    elif "summary" in res_data:
-        ai_response = res_data["summary"]
-    else:
-        ai_response = str(res_data)
-
+    
     history_manager.add_history(
         input=ques,
-        response=ai_response,
+        response=result.get("result", {}).get("response", ""),
         intent=result.get("intent", "")
     )

@@ -1,51 +1,44 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
-from langchain.output_parsers import PydanticOutputParser
-from pydantic import BaseModel
 from typing import Dict
-
-class SummaryOutput(BaseModel):
-    title: str
-    summary: str
-
-parser = PydanticOutputParser(pydantic_object=SummaryOutput)
-format_instructions = parser.get_format_instructions()
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from streaming_utils import stream_json_response
 
 prompt = ChatPromptTemplate.from_messages([
-    ("system",
-     """{format_instructions}
-
-    이전 대화 맥락:
-    {history}"""
-    ),
-    ("human", "문장 요약: {original_text}")
+    ("system", "텍스트를 요약해주세요. 핵심 내용을 간결하고 명확하게 정리해서 제공해주세요."),
+    ("human", "요약해주세요: {user_input}")
 ])
 
 def get_summary_node(llm) -> RunnableLambda:
     def _summary(input_state: Dict) -> Dict:
-        original_text = input_state["input"]
+        user_input = input_state["input"]
         history_context = input_state.get("history", "")
+        
         chain = prompt | llm
-        response = chain.invoke({
-            "original_text": original_text,
-            "history": history_context,
-            "format_instructions": format_instructions
-        })
-
-        try:
-            parsed = parser.parse(response.content)
-        except Exception:
-            parsed = SummaryOutput(
-                title="요약 결과",
-                summary=response.content.strip()
-            )
-
+        
+        def response_generator():
+            for chunk in chain.stream({
+                "user_input": user_input,
+                "history": history_context
+            }):
+                if hasattr(chunk, 'content') and chunk.content:
+                    yield chunk.content
+        
+        full_response = stream_json_response(
+            user_input=user_input,
+            title="요약",
+            intent="요약",
+            response_iterator=response_generator()
+        )
+        
         return {
-            "input": original_text,
-            "title": parsed.title,
-            "intent": "문장 요약",
+            "input": user_input,
+            "title": "요약",
+            "intent": "요약",
             "result": {
-                "summary": parsed.summary
+                "response": full_response
             }
         }
 

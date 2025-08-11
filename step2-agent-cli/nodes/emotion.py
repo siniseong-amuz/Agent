@@ -1,54 +1,44 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
-from langchain.output_parsers import PydanticOutputParser
-from pydantic import BaseModel
 from typing import Dict
-
-class EmotionOutput(BaseModel):
-    title: str
-    emotion: str
-    confidence: float
-
-parser = PydanticOutputParser(pydantic_object=EmotionOutput)
-format_instructions = parser.get_format_instructions()
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from streaming_utils import stream_json_response
 
 prompt = ChatPromptTemplate.from_messages([
-    ("system",
-     """{format_instructions}
-
-    이전 대화 맥락:
-    {history}"""
-    ),
-    ("human", "다음 문장의 감정을 분석해주세요: {original_text}")
+    ("system", "텍스트의 감정을 분석해주세요. 감정의 종류, 강도, 이유를 분석하여 상세하게 설명해주세요."),
+    ("human", "감정 분석해주세요: {user_input}")
 ])
 
 def get_emotion_node(llm) -> RunnableLambda:
     def _emotion(input_state: Dict) -> Dict:
-        original_text = input_state["input"]
+        user_input = input_state["input"]
         history_context = input_state.get("history", "")
+        
         chain = prompt | llm
-        response = chain.invoke({
-            "original_text": original_text,
-            "history": history_context,
-            "format_instructions": format_instructions
-        })
-
-        try:
-            parsed = parser.parse(response.content)
-        except Exception:
-            parsed = EmotionOutput(
-                title="감정 분석 결과",
-                emotion="감정 분석 실패",
-                confidence=0.0
-            )
-
+        
+        def response_generator():
+            for chunk in chain.stream({
+                "user_input": user_input,
+                "history": history_context
+            }):
+                if hasattr(chunk, 'content') and chunk.content:
+                    yield chunk.content
+        
+        full_response = stream_json_response(
+            user_input=user_input,
+            title="감정분석",
+            intent="감정분석",
+            response_iterator=response_generator()
+        )
+        
         return {
-            "input": original_text,
-            "title": parsed.title,
-            "intent": "감정 분석",
+            "input": user_input,
+            "title": "감정분석",
+            "intent": "감정분석",
             "result": {
-                "emotion": parsed.emotion,
-                "confidence": parsed.confidence
+                "response": full_response
             }
         }
 

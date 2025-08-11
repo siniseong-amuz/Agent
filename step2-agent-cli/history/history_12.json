@@ -1,0 +1,12 @@
+[
+  {
+    "input": "안녕하세요?",
+    "response": "",
+    "intent": {
+      "input": "안녕하세요?",
+      "intent_result": "talk",
+      "confidence": 0.95
+    },
+    "timestamp": "2025-08-11T15:58:17.118485"
+  }
+]

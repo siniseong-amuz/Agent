@@ -1,46 +1,40 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
-from langchain.output_parsers import PydanticOutputParser
-from pydantic import BaseModel
 from typing import Dict
-
-class FlightOutput(BaseModel):
-    title: str
-    time: str
-
-parser = PydanticOutputParser(pydantic_object=FlightOutput)
-format_instructions = parser.get_format_instructions()
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from streaming_utils import stream_json_response
 
 prompt = ChatPromptTemplate.from_messages([
-    ("system",
-     """
-     {format_instructions}"""),
-    ("human", "비행시간 질문: {original_text}")
+    ("system", "항공편 관련 질문에 답변해주세요. 항공편 조회, 예약, 체크인, 수하물 등에 대한 정보를 제공할 수 있습니다."),
+    ("human", "항공편 질문: {user_input}")
 ])
 
 def get_flight_node(llm) -> RunnableLambda:
     def _flight(input_state: Dict) -> Dict:
-        original_text = input_state["input"]
+        user_input = input_state["input"]
+        
         chain = prompt | llm
-        response = chain.invoke({
-            "original_text": original_text,
-            "format_instructions": format_instructions
-        })
-
-        try:
-            parsed = parser.parse(response.content)
-        except Exception:
-            parsed = FlightOutput(
-                title="비행시간 계산 결과",
-                time=response.content.strip()
-            )
-
+        
+        def response_generator():
+            for chunk in chain.stream({"user_input": user_input}):
+                if hasattr(chunk, 'content') and chunk.content:
+                    yield chunk.content
+        
+        full_response = stream_json_response(
+            user_input=user_input,
+            title="항공편",
+            intent="항공편",
+            response_iterator=response_generator()
+        )
+        
         return {
-            "input": original_text,
-            "title": parsed.title,
-            "intent": "비행시간 계산",
+            "input": user_input,
+            "title": "항공편",
+            "intent": "항공편",
             "result": {
-                "time": parsed.time
+                "response": full_response
             }
         }
 
