@@ -48,3 +48,56 @@ def stream_json_response(
 
     print('\n}', flush=True)
     return full_response
+
+def stream_all_fields_response(
+    input_iterator, title_iterator, intent_iterator, response_iterator
+) -> tuple[str, str, str, str]:
+    print('{', end="", flush=True)
+
+    # input 스트리밍
+    print('\n  "input": "', end="", flush=True)
+    full_input = ""
+    for chunk in input_iterator:
+        if chunk:
+            for ch in chunk:
+                print(json_escape_char(ch), end="", flush=True)
+                time.sleep(0.01)
+            full_input += chunk
+    print('"', end="", flush=True)
+
+    # title 스트리밍  
+    print(',\n  "title": "', end="", flush=True)
+    full_title = ""
+    for chunk in title_iterator:
+        if chunk:
+            for ch in chunk:
+                print(json_escape_char(ch), end="", flush=True)
+                time.sleep(0.01)
+            full_title += chunk
+    print('"', end="", flush=True)
+    
+    # intent 스트리밍
+    print(',\n  "intent": "', end="", flush=True)
+    full_intent = ""
+    for chunk in intent_iterator:
+        if chunk:
+            for ch in chunk:
+                print(json_escape_char(ch), end="", flush=True)
+                time.sleep(0.01)
+            full_intent += chunk
+    print('"', end="", flush=True)
+
+    # response 스트리밍
+    print(',\n  "result": {', end="", flush=True)
+    print('\n    "response": "', end="", flush=True)
+    full_response = ""
+    for chunk in response_iterator:
+        if chunk:
+            for ch in chunk:
+                print(json_escape_char(ch), end="", flush=True)
+                time.sleep(0.01)
+            full_response += chunk
+    print('"\n  }', end="", flush=True)
+
+    print('\n}', flush=True)
+    return full_input, full_title, full_intent, full_response
