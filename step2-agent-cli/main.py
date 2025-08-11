@@ -63,6 +63,7 @@ while True:
         break
 
     history_context = history_manager.get_recent_context(3)
+
     result = graph.invoke({
         "input": ques,
         "history": history_context
@@ -81,9 +82,3 @@ while True:
         response=ai_response,
         intent=result.get("intent", "")
     )
-    
-    output_result = {
-        k: v for k, v in result.items()
-        if k not in ["intent_result", "confidence", "history"]
-    }
-    print(json.dumps(output_result, indent=2, ensure_ascii=False))

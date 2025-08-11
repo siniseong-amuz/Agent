@@ -1,21 +1,14 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
-from langchain.output_parsers import PydanticOutputParser
-from pydantic import BaseModel
 from typing import Dict
-
-class TalkOutput(BaseModel):
-    title: str
-    response: str
-
-parser = PydanticOutputParser(pydantic_object=TalkOutput)
-format_instructions = parser.get_format_instructions()
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from streaming_utils import stream_json_response
 
 prompt = ChatPromptTemplate.from_messages([
     ("system",
-     """자연스럽게 대화하세요.
-
-    {format_instructions}
+     """자연스럽게 대화하세요. 간단하고 직접적으로 답변해주세요.
 
     이전 대화 맥락:
     {history}"""
@@ -27,27 +20,30 @@ def get_talk_node(llm) -> RunnableLambda:
     def _talk(input_state: Dict) -> Dict:
         user_input = input_state["input"]
         history_context = input_state.get("history", "")
+        
         chain = prompt | llm
-        response = chain.invoke({
-            "user_input": user_input,
-            "history": history_context,
-            "format_instructions": format_instructions
-        })
-
-        try:
-            parsed = parser.parse(response.content)
-        except Exception:
-            parsed = TalkOutput(
-                title="일상대화",
-                response=response.content
-            )
-
+        
+        def response_generator():
+            for chunk in chain.stream({
+                "user_input": user_input,
+                "history": history_context
+            }):
+                if hasattr(chunk, 'content') and chunk.content:
+                    yield chunk.content
+        
+        full_response = stream_json_response(
+            user_input=user_input,
+            title="일상대화", 
+            intent="일상대화",
+            response_iterator=response_generator()
+        )
+        
         return {
             "input": user_input,
-            "title": parsed.title,
+            "title": "일상대화",
             "intent": "일상대화",
             "result": {
-                "response": parsed.response
+                "response": full_response
             }
         }
 
