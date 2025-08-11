@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from streaming_utils import stream_json_response
 
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "번역 요청을 처리하세요. 자동으로 언어를 감지하고 적절히 번역해주세요."),
+    ("system", "번역만 해주세요. 설명이나 추가 정보 없이 번역 결과만 출력하세요."),
     ("human", "번역해주세요: {user_input}")
 ])
 

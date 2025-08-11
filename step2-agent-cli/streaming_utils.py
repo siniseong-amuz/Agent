@@ -34,7 +34,7 @@ def stream_json_response(
 
     stream_json_field("input", user_input, False)
     stream_json_field("title", title, False)
-    stream_json_field("intent", intent, False)
+    stream_json_field("intent", intent, True)
 
     print(',\n  "result": {', end="", flush=True)
     print('\n    "response": "', end="", flush=True)
