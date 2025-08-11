@@ -68,13 +68,20 @@ while True:
 
     history_context = history_manager.get_recent_context(3)
     
-    result = graph.invoke({
+    final_result = None
+    
+    for chunk in graph.stream({
         "input": ques,
         "history": history_context
-    })
+    }):
+        if chunk:
+            for node_name, node_output in chunk.items():
+                if node_name != "intent":
+                    final_result = node_output
     
-    history_manager.add_history(
-        input=ques,
-        response=result.get("result", {}).get("response", ""),
-        intent=result.get("intent", "")
-    )
+    if final_result:
+        history_manager.add_history(
+            input=ques,
+            response=final_result.get("result", {}).get("response", ""),
+            intent=final_result.get("intent", "")
+        )
