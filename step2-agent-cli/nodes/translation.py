@@ -7,7 +7,7 @@ def get_translation_node(llm=None) -> RunnableLambda:
         user_input = state["input"]
         history_context = state.get("history", "")
         
-        title_prompt_text = f"다음 번역 요청을 3~5 단어의 한국어 제목으로 요약: {user_input}"
+        title_prompt_text = f"3~5단어로 간단히 제목만 출력: {user_input}"
         
         translation_prompt_text = (
             "번역만 해주세요. 설명이나 추가 정보 없이 번역 결과만 출력하세요.\n\n"

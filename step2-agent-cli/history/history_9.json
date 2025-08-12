@@ -1,0 +1,14 @@
+[
+  {
+    "input": "안녕하세요 글로벌서비ㅡㅅ팀 신희성입니다를 번역해줘",
+    "response": "안녕하세요, 글로벌 서비스 팀 신희성입니다.\n",
+    "intent": "번역",
+    "timestamp": "2025-08-12T16:16:44.954918"
+  },
+  {
+    "input": "영어로 번역해줘야지...",
+    "response": "Hello, this is Hee-seong Shin from the Global Services Team.\n",
+    "intent": "번역",
+    "timestamp": "2025-08-12T16:16:58.537053"
+  }
+]

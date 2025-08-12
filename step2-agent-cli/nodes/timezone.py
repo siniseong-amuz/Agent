@@ -7,7 +7,7 @@ def get_timezone_node(llm=None) -> RunnableLambda:
         user_input = state["input"]
         history_context = state.get("history", "")
         
-        title_prompt_text = f"다음을 3~5단어로 간단히 제목만 출력: {user_input}"
+        title_prompt_text = f"3~5단어로 간단히 제목만 출력: {user_input}"
         
         timezone_prompt_text = (
             "시간대 관련 질문에 답변해주세요. 현재 시간, 다른 나라 시간, 시간대 변환 등을 도와주세요.\n\n"

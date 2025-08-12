@@ -1,0 +1,26 @@
+[
+  {
+    "input": "안녕하세요를 영어로 해줘",
+    "response": "Hello.\n",
+    "intent": "번역",
+    "timestamp": "2025-08-12T16:17:36.369442"
+  },
+  {
+    "input": "너 이름무머야? 를 영어로 해줘",
+    "response": "What's your name?\n",
+    "intent": "번역",
+    "timestamp": "2025-08-12T16:17:43.947799"
+  },
+  {
+    "input": "너 이름머야?",
+    "response": "What is your name?\n",
+    "intent": "번역",
+    "timestamp": "2025-08-12T16:17:55.342649"
+  },
+  {
+    "input": "너의 역할은 뭔데?",
+    "response": "What is your role?\n",
+    "intent": "일상대화",
+    "timestamp": "2025-08-12T16:18:06.118721"
+  }
+]
