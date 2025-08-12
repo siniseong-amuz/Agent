@@ -1,6 +1,6 @@
 from langchain_core.runnables import RunnableLambda
 from typing import Dict
-from streaming_utils import stream_title_and_response
+from streaming_utils import stream
 
 def get_talk_node(llm=None) -> RunnableLambda:
     def _talk(state: Dict) -> Dict:
@@ -15,7 +15,7 @@ def get_talk_node(llm=None) -> RunnableLambda:
             f"사용자 질문: {user_input}"
         )
 
-        title, full_response = stream_title_and_response(
+        title, full_response = stream(
             user_input=user_input,
             intent="일상대화",
             title_prompt=title_prompt_text,
