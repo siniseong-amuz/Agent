@@ -1,9 +1,7 @@
 import os
-import json
-from typing import TypedDict
 from dotenv import load_dotenv
-from langgraph.graph import StateGraph
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langgraph.graph import StateGraph
 from history import HistoryManager
 from nodes.translation import get_translation_node
 from nodes.emotion import get_emotion_node
@@ -15,7 +13,13 @@ from nodes.talk import get_talk_node
 
 load_dotenv()
 
-class GraphState(TypedDict):
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",
+    google_api_key=os.getenv("GEMINI_API_KEY"),
+    temperature=0.7
+)
+
+class GraphState(dict):
     input: str
     title: str
     intent: str
@@ -36,24 +40,18 @@ ROUTING_MAP = {
 def route(state: GraphState) -> str:
     return ROUTING_MAP.get(state.get("intent_result", "unknown"), "talk")
 
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
-    google_api_key=os.getenv("GEMINI_API_KEY"),
-    temperature=0
-)
 history_manager = HistoryManager()
 
 builder = StateGraph(GraphState)
 builder.add_node("intent", get_intent_node(llm))
-builder.add_node("translation", get_translation_node(llm))
-builder.add_node("emotion", get_emotion_node(llm))
-builder.add_node("timezone", get_timezone_node(llm))
-builder.add_node("flight", get_flight_node(llm))
-builder.add_node("summary", get_summary_node(llm))
-builder.add_node("talk", get_talk_node(llm))
+builder.add_node("translation", get_translation_node(None))
+builder.add_node("emotion", get_emotion_node(None))
+builder.add_node("timezone", get_timezone_node(None))
+builder.add_node("flight", get_flight_node(None))
+builder.add_node("summary", get_summary_node(None))
+builder.add_node("talk", get_talk_node(None))
 builder.set_entry_point("intent")
 builder.add_conditional_edges("intent", route, ROUTING_MAP)
-
 for node in ROUTING_MAP.values():
     builder.set_finish_point(node)
 
@@ -67,21 +65,18 @@ while True:
         break
 
     history_context = history_manager.get_recent_context(3)
-    
     final_result = None
-    
-    for chunk in graph.stream({
-        "input": ques,
-        "history": history_context
-    }):
-        if chunk:
-            for node_name, node_output in chunk.items():
-                if node_name != "intent":
-                    final_result = node_output
-    
+
+    for update in graph.stream({"input": ques, "history": history_context}):
+        for node_name, node_output in update.items():
+            if node_name != "intent":
+                if isinstance(node_output, dict) and "result" in node_output:
+                    if "response" in node_output["result"]:
+                        final_result = node_output
+
     if final_result:
         history_manager.add_history(
             input=ques,
-            response=final_result.get("result", {}).get("response", ""),
+            response=final_result["result"]["response"],
             intent=final_result.get("intent", "")
         )

@@ -1,69 +1,52 @@
+from typing import Dict
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
-from typing import Dict
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from streaming_utils import stream_all_fields_response
+from streaming_utils import stream_gemini_response, get_gemini_model
 
 title_prompt = ChatPromptTemplate.from_messages([
-    ("system", "사용자의 질문을 기반으로 3-5단어의 간단한 제목을 생성하세요. 응답이랑 내용이 중복되지 않도록 하세요."),
+    ("system", "사용자의 질문을 기반으로 3~5 단어의 간단한 제목을 생성하세요. 응답 내용과 중복되지 않게 하세요."),
     ("human", "{user_input}")
 ])
 
-talk_prompt = ChatPromptTemplate.from_messages([
-    ("system",
-     """자연스럽게 대화하세요. 간단하고 직접적으로 답변해주세요.
+def get_talk_node(llm=None) -> RunnableLambda:
+    def _talk(state: Dict) -> Dict:
+        user_input = state["input"]
+        history_context = state.get("history", "")
+        if llm is not None:
+            try:
+                title_msg = (title_prompt | llm).invoke({"user_input": user_input})
+                title = getattr(title_msg, "content", str(title_msg)).strip() or "대화"
+            except Exception:
+                title = "대화"
+        else:
+            try:
+                model = get_gemini_model()
+                title_resp = model.generate_content(
+                    f"다음 사용자 질문을 3~5 단어의 한국어 제목으로 요약: {user_input}"
+                )
+                title = (getattr(title_resp, "text", "") or "").strip() or "대화"
+            except Exception:
+                title = "대화"
 
-    이전 대화 맥락:
-    {history}"""
-    ),
-    ("human", "{user_input}")
-])
+        talk_prompt_text = f"""자연스럽게 대화하세요. 간단하고 직접적으로 답변해주세요.
 
-def get_talk_node(llm) -> RunnableLambda:
-    def _talk(input_state: Dict) -> Dict:
-        user_input = input_state["input"]
-        history_context = input_state.get("history", "")
-        
-        title_chain = title_prompt | llm
-        talk_chain = talk_prompt | llm
-        
-        def input_generator():
-            for char in user_input:
-                yield char
-        
-        def title_generator():
-            for chunk in title_chain.stream({"user_input": user_input}):
-                if hasattr(chunk, 'content') and chunk.content:
-                    yield chunk.content
-        
-        def intent_generator():
-            for char in "일상대화":
-                yield char
-        
-        def response_generator():
-            for chunk in talk_chain.stream({
-                "user_input": user_input,
-                "history": history_context
-            }):
-                if hasattr(chunk, 'content') and chunk.content:
-                    yield chunk.content
-        
-        full_input, full_title, full_intent, full_response = stream_all_fields_response(
-            input_iterator=input_generator(),
-            title_iterator=title_generator(),
-            intent_iterator=intent_generator(),
-            response_iterator=response_generator()
+        이전 대화 맥락:
+        {history_context}
+
+        사용자 질문: {user_input}"""
+
+        full_response = stream_gemini_response(
+            user_input=user_input,
+            title=title,
+            intent="일상대화",
+            prompt=talk_prompt_text
         )
-        
+
         return {
-            "input": full_input,
-            "title": full_title,
-            "intent": full_intent,
-            "result": {
-                "response": full_response
-            }
+            "input": user_input,
+            "title": title,
+            "intent": "일상대화",
+            "result": {"response": full_response}
         }
 
     return RunnableLambda(_talk)

@@ -1,6 +1,10 @@
-import sys
-import time
-from typing import Iterator
+import google.generativeai as genai
+import os
+import json
+
+def get_gemini_model():
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    return genai.GenerativeModel("gemini-2.0-flash")
 
 def json_escape_char(c: str) -> str:
     if c == '\\':
@@ -16,88 +20,32 @@ def json_escape_char(c: str) -> str:
     else:
         return c
 
-def stream_json_field(key: str, value: str, is_last: bool):
-    print(f'\n  "{key}": "', end="", flush=True)
-    for ch in value:
-        print(json_escape_char(ch), end="", flush=True)
-        time.sleep(0.01)
-    print('"', end="", flush=True)
-    if not is_last:
-        print(',', end="", flush=True)
-    else:
-        print('', end="", flush=True)
-
-def stream_json_response(
-    user_input: str, title: str, intent: str, response_iterator: Iterator[str]
-) -> str:
-    print('{', end="", flush=True)
-
-    stream_json_field("input", user_input, False)
-    stream_json_field("title", title, False)
-    stream_json_field("intent", intent, True)
-
-    print(',\n  "result": {', end="", flush=True)
-    print('\n    "response": "', end="", flush=True)
+def stream_gemini_response(user_input: str, title: str, intent: str, prompt: str) -> str:
+    model = get_gemini_model()
     full_response = ""
-    for chunk in response_iterator:
-        if chunk:
-            for ch in chunk:
-                print(json_escape_char(ch), end="", flush=True)
-            full_response += chunk
-    print('"\n  }', end="", flush=True)
 
-    print('\n}', flush=True)
+    print('{', flush=True)
+    print(f'  "input": "{user_input}",', flush=True)
+    print(f'  "title": "{title}",', flush=True)
+    print(f'  "intent": "{intent}",', flush=True)
+    print('  "result": {', flush=True)
+    print('    "response": "', end="", flush=True)
+
+    try:
+        response = model.generate_content(prompt, stream=True)
+        for chunk in response:
+            if chunk.text:
+                for ch in chunk.text:
+                    print(json_escape_char(ch), end="", flush=True)
+                full_response += chunk.text
+    except Exception as e:
+        err_msg = f"오류 발생: {e}"
+        for ch in err_msg:
+            print(json_escape_char(ch), end="", flush=True)
+        full_response = err_msg
+
+    print('"', flush=True)
+    print('  }', flush=True)
+    print('}', flush=True)
+
     return full_response
-
-def stream_all_fields_response(
-    input_iterator, title_iterator, intent_iterator, response_iterator
-) -> tuple[str, str, str, str]:
-    print('{', end="", flush=True)
-
-    # input 스트리밍
-    print('\n  "input": "', end="", flush=True)
-    full_input = ""
-    for chunk in input_iterator:
-        if chunk:
-            for ch in chunk:
-                print(json_escape_char(ch), end="", flush=True)
-                time.sleep(0.01)
-            full_input += chunk
-    print('"', end="", flush=True)
-
-    # title 스트리밍  
-    print(',\n  "title": "', end="", flush=True)
-    full_title = ""
-    for chunk in title_iterator:
-        if chunk:
-            for ch in chunk:
-                print(json_escape_char(ch), end="", flush=True)
-                time.sleep(0.01)
-            full_title += chunk
-    print('"', end="", flush=True)
-    
-    # intent 스트리밍
-    print(',\n  "intent": "', end="", flush=True)
-    full_intent = ""
-    for chunk in intent_iterator:
-        if chunk:
-            for ch in chunk:
-                print(json_escape_char(ch), end="", flush=True)
-                time.sleep(0.01)
-            full_intent += chunk
-    print('"', end="", flush=True)
-
-    # response 스트리밍
-    print(',\n  "result": {', end="", flush=True)
-    print('\n    "response": "', end="", flush=True)
-    full_response = ""
-    for chunk in response_iterator:
-        if chunk:
-            for ch in chunk:
-                print(json_escape_char(ch), end="", flush=True)
-                time.sleep(0.01)
-            full_response += chunk
-    print('"\n  }', end="", flush=True)
-
-    print('\n}', flush=True)
-    return full_input, full_title, full_intent, full_response

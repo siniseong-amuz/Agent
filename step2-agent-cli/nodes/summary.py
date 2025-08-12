@@ -1,64 +1,53 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
 from typing import Dict
-import sys
-import os
+import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from streaming_utils import stream_all_fields_response
+from streaming_utils import stream_gemini_response, get_gemini_model
 
 title_prompt = ChatPromptTemplate.from_messages([
-    ("system", "사용자의 요약 요청을 기반으로 3-5단어의 간단한 제목을 생성하세요. 응답이랑 내용이 중복되지 않도록 하세요."),
+    ("system", "사용자의 요약 요청을 기반으로 3~5단어의 간단한 제목을 생성하세요. 응답과 중복되지 않게 하세요."),
     ("human", "{user_input}")
 ])
 
-summary_prompt = ChatPromptTemplate.from_messages([
-    ("system", "텍스트를 요약해주세요. 핵심 내용을 간결하고 명확하게 정리해서 제공해주세요."),
-    ("human", "요약해주세요: {user_input}")
-])
+def get_summary_node(llm=None) -> RunnableLambda:
+    def _summary(state: Dict) -> Dict:
+        user_input = state["input"]
+        history_context = state.get("history", "")
+        if llm is not None:
+            try:
+                title_msg = (title_prompt | llm).invoke({"user_input": user_input})
+                title = getattr(title_msg, "content", str(title_msg)).strip() or "요약"
+            except Exception:
+                title = "요약"
+        else:
+            try:
+                model = get_gemini_model()
+                t = model.generate_content(
+                    f"다음 텍스트 요약 요청을 3~5 단어의 한국어 제목으로 요약: {user_input}"
+                )
+                title = (getattr(t, "text", "") or "").strip() or "요약"
+            except Exception:
+                title = "요약"
 
-def get_summary_node(llm) -> RunnableLambda:
-    def _summary(input_state: Dict) -> Dict:
-        user_input = input_state["input"]
-        history_context = input_state.get("history", "")
-        
-        title_chain = title_prompt | llm
-        summary_chain = summary_prompt | llm
-        
-        def input_generator():
-            for char in user_input:
-                yield char
-        
-        def title_generator():
-            for chunk in title_chain.stream({"user_input": user_input}):
-                if hasattr(chunk, 'content') and chunk.content:
-                    yield chunk.content
-        
-        def intent_generator():
-            for char in "요약":
-                yield char
-        
-        def response_generator():
-            for chunk in summary_chain.stream({
-                "user_input": user_input,
-                "history": history_context
-            }):
-                if hasattr(chunk, 'content') and chunk.content:
-                    yield chunk.content
-        
-        full_input, full_title, full_intent, full_response = stream_all_fields_response(
-            input_iterator=input_generator(),
-            title_iterator=title_generator(),
-            intent_iterator=intent_generator(),
-            response_iterator=response_generator()
+        summary_prompt_text = (
+            "텍스트를 요약해주세요. 핵심 내용을 간결하고 명확하게 정리하세요.\n\n"
+            f"요약해주세요: {user_input}\n\n"
+            f"(참고 맥락)\n{history_context}"
         )
-        
+
+        full_response = stream_gemini_response(
+            user_input=user_input,
+            title=title,
+            intent="summary",
+            prompt=summary_prompt_text
+        )
+
         return {
-            "input": full_input,
-            "title": full_title,
-            "intent": full_intent,
-            "result": {
-                "response": full_response
-            }
+            "input": user_input,
+            "title": title,
+            "intent": "summary",
+            "result": {"response": full_response}
         }
 
     return RunnableLambda(_summary)
