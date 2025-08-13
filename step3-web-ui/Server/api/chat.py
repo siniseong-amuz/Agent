@@ -24,11 +24,13 @@ class ChatResponse(BaseModel):
 async def chat(request: ChatRequest):
     try:
         result = await chat_service.process_message(request.message)
+        response_data = result.get("response", {})
+        
         return ChatResponse(
             input=request.message,
             title=result.get("title", ""),
             intent=result.get("intent", ""),
-            result={"response": result.get("response", "")}
+            result=response_data if isinstance(response_data, dict) else {"response": response_data}
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"처리 중 오류가 발생했습니다: {str(e)}")
