@@ -1,5 +1,8 @@
 import os
 import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'step2-agent-cli'))
+
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import StateGraph
@@ -12,7 +15,6 @@ from nodes.flight import get_flight_node
 from nodes.summary import get_summary_node
 from nodes.search import get_search_node
 from nodes.talk import get_talk_node
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'step2-agent-cli'))
 
 load_dotenv()
 
@@ -75,19 +77,38 @@ class ChatService:
             for node_name, node_output in update.items():
                 if node_name != "intent":
                     if isinstance(node_output, dict) and "result" in node_output:
-                        if "response" in node_output["result"]:
-                            final_result = node_output
+                        final_result = node_output
         
         if final_result:
+            intent = final_result.get("intent", "")
+            result_data = final_result["result"]
+            
+            if intent == "번역":
+                response_text = result_data.get("translation", "")
+                response_data = {
+                    "original": result_data.get("original", ""),
+                    "translation": result_data.get("translation", "")
+                }
+            elif intent == "emotion":
+                response_text = result_data.get("response", "")
+                response_data = {
+                    "emotion": result_data.get("response", ""),
+                    "message": result_data.get("message", "")
+                }
+            else:
+                response_text = result_data.get("response", "")
+                response_data = result_data.get("response", "")
+            
             self.history_manager.add_history(
                 input=message,
-                response=final_result["result"]["response"],
-                intent=final_result.get("intent", "")
+                response=response_text,
+                intent=intent
             )
+            
             return {
                 "title": final_result.get("title", ""),
-                "intent": final_result.get("intent", ""),
-                "response": final_result["result"]["response"]
+                "intent": intent,
+                "response": response_data
             }
         
         return {
