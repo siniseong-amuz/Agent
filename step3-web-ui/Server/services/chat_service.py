@@ -87,20 +87,20 @@ class ChatService:
             result_data = final_result["result"]
             
             if intent == "번역":
-                response_text = result_data.get("translation", "")
                 response_data = {
                     "original": result_data.get("original", ""),
                     "translation": result_data.get("translation", "")
                 }
+                response_text = result_data.get("translation", "")
             elif intent == "emotion":
-                response_text = result_data.get("response", "")
                 response_data = {
                     "emotion": result_data.get("response", ""),
                     "message": result_data.get("message", "")
                 }
+                response_text = f"{result_data.get('response', '')} - {result_data.get('message', '')}"
             else:
-                response_text = result_data.get("response", "")
                 response_data = result_data.get("response", "")
+                response_text = result_data.get("response", "")
             
             self.history_manager.add_history(
                 input=message,
@@ -110,10 +110,9 @@ class ChatService:
             
             await self.save_to_database(
                 input=message,
-                response=response_text,
                 intent=intent,
                 title=final_result.get("title", ""),
-                confidence=final_result.get("confidence", 0.0)
+                result=response_data
             )
             
             return {
@@ -128,14 +127,13 @@ class ChatService:
             "response": "eroror..."
         }
     
-    async def save_to_database(self, input: str, response: str, intent: str, title: str = "", confidence: float = 0.0):
+    async def save_to_database(self, input: str, intent: str, title: str = "", result: dict = None):
         async with AsyncSessionLocal() as session:
             chat_record = ChatHistory(
                 input=input,
-                response=response,
                 intent=intent,
                 title=title,
-                confidence=confidence
+                result=result
             )
             session.add(chat_record)
             await session.commit()
