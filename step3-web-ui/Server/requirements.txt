@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+python-dotenv
+python-jose[cryptography]
+passlib[bcrypt]
+langchain
+langchain-google-genai
+langgraph
+google-generativeai
+requests
+beautifulsoup4
+urllib3
