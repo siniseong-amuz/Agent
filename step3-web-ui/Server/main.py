@@ -1,20 +1,21 @@
 from fastapi import FastAPI
 from config.cors import setup_cors
+from api.chat import router as chat_router
+
 
 app = FastAPI(
     title="langlanglang-ai API",
-    description="amuz project - Agnet API (siniseong)",
+    description="amuz project - Agent API (siniseong)",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
+# CORS 설정 적용
 app = setup_cors(app)
 
-@app.post("/chat", tags=["프롬프트 입력 (Prompt input)"], summary="대화 입력", description="에이전트와의 대화를 처리합니다.")
-async def chat():
-    return {"message": "AI Agent API Server"}
-
+# 라우터 등록
+app.include_router(chat_router)
 
 
 if __name__ == "__main__":

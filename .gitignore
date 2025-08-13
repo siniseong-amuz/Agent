@@ -1,2 +1,5 @@
 .env
 ./step2-agent-cli/history.json
+__pycache__/
+*.py[cod]
+*$py.class
