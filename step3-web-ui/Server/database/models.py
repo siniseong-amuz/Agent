@@ -1,0 +1,27 @@
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import func
+
+Base = declarative_base()
+
+class ChatHistory(Base):
+    __tablename__ = "chat_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    input = Column(Text, nullable=False)
+    response = Column(Text, nullable=False)
+    intent = Column(String(50), nullable=False)
+    title = Column(String(200))
+    confidence = Column(Float)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "input": self.input,
+            "response": self.response,
+            "intent": self.intent,
+            "title": self.title,
+            "confidence": self.confidence,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }

@@ -12,3 +12,7 @@ google-generativeai
 requests
 beautifulsoup4
 urllib3
+sqlalchemy
+aiosqlite
+asyncpg
+psycopg2-binary

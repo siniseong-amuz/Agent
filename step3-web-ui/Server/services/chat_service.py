@@ -15,6 +15,9 @@ from nodes.flight import get_flight_node
 from nodes.summary import get_summary_node
 from nodes.search import get_search_node
 from nodes.talk import get_talk_node
+from database.database import AsyncSessionLocal
+from database.models import ChatHistory
+from sqlalchemy.future import select
 
 load_dotenv()
 
@@ -105,6 +108,14 @@ class ChatService:
                 intent=intent
             )
             
+            await self.save_to_database(
+                input=message,
+                response=response_text,
+                intent=intent,
+                title=final_result.get("title", ""),
+                confidence=final_result.get("confidence", 0.0)
+            )
+            
             return {
                 "title": final_result.get("title", ""),
                 "intent": intent,
@@ -116,3 +127,22 @@ class ChatService:
             "intent": "error",
             "response": "eroror..."
         }
+    
+    async def save_to_database(self, input: str, response: str, intent: str, title: str = "", confidence: float = 0.0):
+        async with AsyncSessionLocal() as session:
+            chat_record = ChatHistory(
+                input=input,
+                response=response,
+                intent=intent,
+                title=title,
+                confidence=confidence
+            )
+            session.add(chat_record)
+            await session.commit()
+    
+    async def get_chat_history(self, limit: int = 10):
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ChatHistory).order_by(ChatHistory.created_at.desc()).limit(limit)
+            )
+            return [record.to_dict() for record in result.scalars().all()]

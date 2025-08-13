@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from config.cors import setup_cors
 from api.chat import router as chat_router
+from database.database import init_db
 
 
 app = FastAPI(
@@ -10,6 +11,10 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+@app.on_event("startup")
+async def startup_event():
+    await init_db()
 
 app = setup_cors(app)
 app.include_router(chat_router)
