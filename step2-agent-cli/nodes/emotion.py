@@ -1,6 +1,6 @@
 from langchain_core.runnables import RunnableLambda
 from typing import Dict
-from streaming_utils import stream
+from streaming_utils import stream_emotion
 
 def get_emotion_node(llm=None) -> RunnableLambda:
     def _emotion(state: Dict) -> Dict:
@@ -10,23 +10,31 @@ def get_emotion_node(llm=None) -> RunnableLambda:
         title_prompt_text = f"다음을 3~5단어로 간단히 제목만 출력: {user_input}"
         
         emotion_prompt_text = (
-            "텍스트의 감정을 간단하게 분석하세요. 주요 감정과 강도만 짧게 답변하세요.\n\n"
-            f"감정 분석해주세요: {user_input}\n\n"
+            f"텍스트의 주요 감정만 한 단어로 출력하세요: {user_input}\n\n"
+            f"(참고 맥락)\n{history_context}"
+        )
+        
+        message_prompt_text = (
+            f"다음 텍스트에 대해 공감하고 위로하는 메시지를 작성해주세요: {user_input}\n\n"
             f"(참고 맥락)\n{history_context}"
         )
 
-        title, full_response = stream(
+        title, emotion_response, message_response = stream_emotion(
             user_input=user_input,
             intent="emotion",
             title_prompt=title_prompt_text,
-            response_prompt=emotion_prompt_text
+            emotion_prompt=emotion_prompt_text,
+            message_prompt=message_prompt_text
         )
 
         return {
             "input": user_input,
             "title": title or "감정분석",
             "intent": "emotion",
-            "result": {"response": full_response}
+            "result": {
+                "response": emotion_response,
+                "message": message_response
+            }
         }
 
     return RunnableLambda(_emotion)

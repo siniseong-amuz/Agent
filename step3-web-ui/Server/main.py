@@ -11,12 +11,8 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS 설정 적용
 app = setup_cors(app)
-
-# 라우터 등록
 app.include_router(chat_router)
-
 
 if __name__ == "__main__":
     import uvicorn

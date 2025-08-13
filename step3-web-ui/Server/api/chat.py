@@ -14,7 +14,13 @@ class ChatResponse(BaseModel):
     intent: str
     result: dict
 
-@router.post("/chat", tags=["프롬프트 입력 (Prompt input)"], summary="대화 입력", description="에이전트와의 대화를 처리합니다.", response_model=ChatResponse)
+@router.post(
+    "/chat",
+    tags=["프롬프트 입력 (Prompt input)"],
+    summary="대화 입력",
+    description="에이전트와의 대화를 처리합니다.",
+    response_model=ChatResponse
+)
 async def chat(request: ChatRequest):
     try:
         result = await chat_service.process_message(request.message)

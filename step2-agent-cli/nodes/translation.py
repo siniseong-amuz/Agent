@@ -15,7 +15,7 @@ def get_translation_node(llm=None) -> RunnableLambda:
             f"(참고 맥락)\n{history_context}"
         )
 
-        title, full_response = stream_translation(
+        title, original, translation = stream_translation(
             user_input=user_input,
             intent="번역",
             title_prompt=title_prompt_text,
@@ -26,7 +26,10 @@ def get_translation_node(llm=None) -> RunnableLambda:
             "input": user_input,
             "title": title or "번역",
             "intent": "번역",
-            "result": {"response": full_response}
+            "result": {
+                "original": original,
+                "translation": translation
+            }
         }
 
     return RunnableLambda(_translate)
