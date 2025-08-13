@@ -9,6 +9,7 @@ from nodes.intent import get_intent_node
 from nodes.timezone import get_timezone_node
 from nodes.flight import get_flight_node
 from nodes.summary import get_summary_node
+from nodes.search import get_search_node
 from nodes.talk import get_talk_node
 
 load_dotenv()
@@ -34,6 +35,7 @@ ROUTING_MAP = {
     "timezone": "timezone",
     "flight": "flight",
     "summary": "summary",
+    "search": "search",
     "talk": "talk"
 }
 
@@ -49,6 +51,7 @@ builder.add_node("emotion", get_emotion_node(None))
 builder.add_node("timezone", get_timezone_node(None))
 builder.add_node("flight", get_flight_node(None))
 builder.add_node("summary", get_summary_node(None))
+builder.add_node("search", get_search_node(None))
 builder.add_node("talk", get_talk_node(None))
 builder.set_entry_point("intent")
 builder.add_conditional_edges("intent", route, ROUTING_MAP)

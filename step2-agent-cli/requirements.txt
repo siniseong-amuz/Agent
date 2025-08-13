@@ -3,3 +3,6 @@ langgraph
 langchain
 langchain-google-genai
 google-generativeai
+requests
+beautifulsoup4
+urllib3
