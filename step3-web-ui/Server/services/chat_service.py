@@ -15,8 +15,9 @@ from nodes.summary import get_summary_node
 from nodes.search import get_search_node
 from nodes.talk import get_talk_node
 from database.database import AsyncSessionLocal
-from database.models import ChatHistory, ChatRoom
+from database.models import ChatRoom
 from sqlalchemy.future import select
+from services.history_service import HistoryService
 
 load_dotenv()
 
@@ -36,6 +37,7 @@ class ChatService:
             google_api_key=os.getenv("GEMINI_API_KEY"),
             temperature=0.7
         )
+        self.history_service = HistoryService()
         
         self.ROUTING_MAP = {
             "translation": "translation",
@@ -69,44 +71,10 @@ class ChatService:
         
         return builder.compile()
     
-    async def get_recent_context(self, room_id: str, count: int = 5) -> str:
-        async with AsyncSessionLocal() as session:
-            result = await session.execute(
-                select(ChatHistory)
-                .where(ChatHistory.room_id == room_id)
-                .order_by(ChatHistory.created_at.desc())
-                .limit(count)
-            )
-            records = result.scalars().all()
-            
-            if not records:
-                return ""
-            
-            context_parts = []
-            for record in reversed(records):
-                context_parts.append(f"사용자: {record.input}")
-                
-                result_data = record.result
-                if isinstance(result_data, dict):
-                    if record.intent == "번역":
-                        response_text = result_data.get("translation", "")
-                    elif record.intent == "emotion":
-                        emotion = result_data.get("emotion", "")
-                        message = result_data.get("message", "")
-                        response_text = f"{emotion} - {message}"
-                    else:
-                        response_text = result_data.get("response", "")
-                else:
-                    response_text = str(result_data) if result_data else ""
-                
-                context_parts.append(f"AI: {response_text}")
-            
-            return "\n".join(context_parts)
-    
     async def process_message(self, message: str, room_id: str):
         await self.verify_chatroom_exists(room_id)
         
-        history_context = await self.get_recent_context(room_id, 5)
+        history_context = await self.history_service.get_recent_context(room_id, 5)
         final_result = None
         
         for update in self.graph.stream({"input": message, "history": history_context}):
@@ -135,7 +103,7 @@ class ChatService:
                 response_data = result_data.get("response", "")
                 response_text = result_data.get("response", "")
             
-            chat_record = await self.save_to_database(
+            chat_record = await self.history_service.save_to_database(
                 room_id=room_id,
                 input=message,
                 intent=intent,
@@ -170,59 +138,5 @@ class ChatService:
             if not chatroom:
                 raise ValueError(f"채팅방 {room_id}를 찾을 수 없습니다.")
     
-    async def save_to_database(self, room_id: str, input: str, intent: str, title: str = "", result: dict = None):
-        async with AsyncSessionLocal() as session:
-            chat_record = ChatHistory(
-                room_id=room_id,
-                input=input,
-                intent=intent,
-                title=title,
-                result=result
-            )
-            session.add(chat_record)
-            await session.commit()
-            await session.refresh(chat_record)
-            
-            if title and title.strip():
-                await self.update_chatroom_title_if_first_message(session, room_id, title)
-            
-            return chat_record
-    
-    async def update_chatroom_title_if_first_message(self, session, room_id: str, title: str):
-        count_result = await session.execute(
-            select(ChatHistory).where(ChatHistory.room_id == room_id)
-        )
-        message_count = len(count_result.scalars().all())
-        
-        if message_count == 1:
-            chatroom_result = await session.execute(
-                select(ChatRoom).where(ChatRoom.id == room_id)
-            )
-            chatroom = chatroom_result.scalar_one_or_none()
-            if chatroom and chatroom.title == "new chat":
-                chatroom.title = title
-                await session.commit()
-    
     async def get_chat_history_by_room(self, room_id: str, limit: int = 50):
-        async with AsyncSessionLocal() as session:
-            result = await session.execute(
-                select(ChatHistory)
-                .where(ChatHistory.room_id == room_id)
-                .order_by(ChatHistory.created_at.asc())
-                .limit(limit)
-            )
-            records = []
-            for record in result.scalars().all():
-                record_dict = record.to_dict()
-                
-                result_data = record_dict.get("result")
-                if isinstance(result_data, str):
-                    result_data = {"response": result_data}
-                
-                simplified_record = {
-                    "input": record_dict.get("input"),
-                    "intent": record_dict.get("intent"),
-                    "result": result_data
-                }
-                records.append(simplified_record)
-            return records
+        return await self.history_service.get_chat_history_by_room(room_id, limit)
