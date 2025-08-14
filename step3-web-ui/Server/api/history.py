@@ -1,18 +1,15 @@
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from typing import List
+from typing import List, Any
 from services.chat_service import ChatService
 
 router = APIRouter()
 chat_service = ChatService()
 
-class ChatResult(BaseModel):
-    response: str
-
 class ChatHistoryResponse(BaseModel):
     input: str
     intent: str
-    result: ChatResult
+    result: Any
 
 @router.get(
     "/history/{id}",

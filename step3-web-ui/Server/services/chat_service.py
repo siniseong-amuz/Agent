@@ -69,12 +69,47 @@ class ChatService:
         
         return builder.compile()
     
+    async def get_recent_context(self, room_id: str, count: int = 5) -> str:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ChatHistory)
+                .where(ChatHistory.room_id == room_id)
+                .order_by(ChatHistory.created_at.desc())
+                .limit(count)
+            )
+            records = result.scalars().all()
+            
+            if not records:
+                return ""
+            
+            context_parts = []
+            for record in reversed(records):
+                context_parts.append(f"사용자: {record.input}")
+                
+                result_data = record.result
+                if isinstance(result_data, dict):
+                    if record.intent == "번역":
+                        response_text = result_data.get("translation", "")
+                    elif record.intent == "emotion":
+                        emotion = result_data.get("emotion", "")
+                        message = result_data.get("message", "")
+                        response_text = f"{emotion} - {message}"
+                    else:
+                        response_text = result_data.get("response", "")
+                else:
+                    response_text = str(result_data) if result_data else ""
+                
+                context_parts.append(f"AI: {response_text}")
+            
+            return "\n".join(context_parts)
+    
     async def process_message(self, message: str, room_id: str):
         await self.verify_chatroom_exists(room_id)
         
+        history_context = await self.get_recent_context(room_id, 5)
         final_result = None
         
-        for update in self.graph.stream({"input": message, "history": ""}):
+        for update in self.graph.stream({"input": message, "history": history_context}):
             for node_name, node_output in update.items():
                 if node_name != "intent":
                     if isinstance(node_output, dict) and "result" in node_output:
@@ -137,7 +172,6 @@ class ChatService:
     
     async def save_to_database(self, room_id: str, input: str, intent: str, title: str = "", result: dict = None):
         async with AsyncSessionLocal() as session:
-            # 채팅 히스토리 저장
             chat_record = ChatHistory(
                 room_id=room_id,
                 input=input,
@@ -149,7 +183,6 @@ class ChatService:
             await session.commit()
             await session.refresh(chat_record)
             
-            # 채팅방 제목 업데이트 (첫 번째 메시지에서 title이 있는 경우)
             if title and title.strip():
                 await self.update_chatroom_title_if_first_message(session, room_id, title)
             
@@ -161,7 +194,6 @@ class ChatService:
         )
         message_count = len(count_result.scalars().all())
         
-        # 첫 번째 메시지인 경우 채팅방 제목 업데이트
         if message_count == 1:
             chatroom_result = await session.execute(
                 select(ChatRoom).where(ChatRoom.id == room_id)
@@ -183,7 +215,6 @@ class ChatService:
             for record in result.scalars().all():
                 record_dict = record.to_dict()
                 
-                # result가 문자열인 경우에만 {"response": ...} 형태로 변환
                 result_data = record_dict.get("result")
                 if isinstance(result_data, str):
                     result_data = {"response": result_data}
@@ -191,7 +222,7 @@ class ChatService:
                 simplified_record = {
                     "input": record_dict.get("input"),
                     "intent": record_dict.get("intent"),
-                    "result": result_data  # 원본 result 구조 유지
+                    "result": result_data
                 }
                 records.append(simplified_record)
             return records

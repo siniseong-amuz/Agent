@@ -14,7 +14,7 @@ class ChatResponse(BaseModel):
     id: str
     input: str
     intent: str
-    result: Any  # 다양한 형태의 result를 지원
+    result: Any
 
 @router.post(
     "/chat",
@@ -33,7 +33,7 @@ async def chat(request: ChatRequest):
             id=result.get("room_id"),
             input=request.message,
             intent=result.get("intent", ""),
-            result=response_data  # 원본 response 구조 그대로 전달
+            result=response_data
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"처리 중 오류가 발생했습니다: {str(e)}")
