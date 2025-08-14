@@ -13,6 +13,8 @@ AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=F
 
 async def init_db():
     async with engine.begin() as conn:
+        # await conn.run_sync(Base.metadata.drop_all) 
+        # 계속 변경될 때 사용 (DB 초기화)
         await conn.run_sync(Base.metadata.create_all)
 
 async def get_db():

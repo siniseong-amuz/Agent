@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from config.cors import setup_cors
+from api.newchat import router as newchat_router
+from api.chatrooms import router as chatrooms_router
 from api.chat import router as chat_router
-from api.chat_history import router as chat_history_router
+from api.history import router as history_router
 from database.database import init_db
 
 
@@ -18,8 +20,10 @@ async def startup_event():
     await init_db()
 
 app = setup_cors(app)
+app.include_router(newchat_router)
+app.include_router(chatrooms_router)
 app.include_router(chat_router)
-app.include_router(chat_history_router)
+app.include_router(history_router)
 
 if __name__ == "__main__":
     import uvicorn

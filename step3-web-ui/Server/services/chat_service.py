@@ -16,7 +16,7 @@ from nodes.summary import get_summary_node
 from nodes.search import get_search_node
 from nodes.talk import get_talk_node
 from database.database import AsyncSessionLocal
-from database.models import ChatHistory
+from database.models import ChatHistory, ChatRoom
 from sqlalchemy.future import select
 
 load_dotenv()
@@ -72,7 +72,9 @@ class ChatService:
         
         return builder.compile()
     
-    async def process_message(self, message: str):
+    async def process_message(self, message: str, room_id: str):
+        await self.verify_chatroom_exists(room_id)
+        
         history_context = self.history_manager.get_recent_context(3)
         final_result = None
         
@@ -108,7 +110,8 @@ class ChatService:
                 intent=intent
             )
             
-            await self.save_to_database(
+            chat_record = await self.save_to_database(
+                room_id=room_id,
                 input=message,
                 intent=intent,
                 title=final_result.get("title", ""),
@@ -116,20 +119,36 @@ class ChatService:
             )
             
             return {
+                "id": chat_record.id,
+                "room_id": room_id,
                 "title": final_result.get("title", ""),
                 "intent": intent,
-                "response": response_data
+                "response": response_data,
+                "created_at": chat_record.created_at.isoformat()
             }
         
         return {
+            "id": None,
+            "room_id": room_id,
             "title": "",
             "intent": "error",
-            "response": "eroror..."
+            "response": "error...",
+            "created_at": ""
         }
     
-    async def save_to_database(self, input: str, intent: str, title: str = "", result: dict = None):
+    async def verify_chatroom_exists(self, room_id: str):
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ChatRoom).where(ChatRoom.id == room_id)
+            )
+            chatroom = result.scalar_one_or_none()
+            if not chatroom:
+                raise ValueError(f"채팅방 {room_id}를 찾을 수 없습니다.")
+    
+    async def save_to_database(self, room_id: str, input: str, intent: str, title: str = "", result: dict = None):
         async with AsyncSessionLocal() as session:
             chat_record = ChatHistory(
+                room_id=room_id,
                 input=input,
                 intent=intent,
                 title=title,
@@ -137,10 +156,22 @@ class ChatService:
             )
             session.add(chat_record)
             await session.commit()
+            await session.refresh(chat_record)
+            
+            chatroom_result = await session.execute(
+                select(ChatRoom).where(ChatRoom.id == room_id)
+            )
+            chatroom = chatroom_result.scalar_one()
+            await session.commit()
+            
+            return chat_record
     
-    async def get_chat_history(self, limit: int = 10):
+    async def get_chat_history_by_room(self, room_id: str, limit: int = 50):
         async with AsyncSessionLocal() as session:
             result = await session.execute(
-                select(ChatHistory).order_by(ChatHistory.created_at.desc()).limit(limit)
+                select(ChatHistory)
+                .where(ChatHistory.room_id == room_id)
+                .order_by(ChatHistory.created_at.asc())
+                .limit(limit)
             )
             return [record.to_dict() for record in result.scalars().all()]
