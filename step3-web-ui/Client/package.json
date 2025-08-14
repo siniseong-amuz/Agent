@@ -1,18 +1,24 @@
 {
-  "name": "langlanglang-ai",
+  "name": "client",
+  "version": "0.1.0",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
   "dependencies": {
-    "vue": "^3.5.18"
+    "vue": "^3.3.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.1",
-    "vite": "^7.1.2"
+    "@vitejs/plugin-vue": "^4.4.0",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.45.0",
+    "eslint-plugin-vue": "^9.17.0",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.1",
+    "vite": "^4.4.5"
   }
 }
