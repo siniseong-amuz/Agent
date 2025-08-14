@@ -6,7 +6,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'step2
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import StateGraph
-from history import HistoryManager
 from nodes.translation import get_translation_node
 from nodes.emotion import get_emotion_node
 from nodes.intent import get_intent_node
@@ -48,9 +47,7 @@ class ChatService:
             "talk": "talk"
         }
         
-        self.history_manager = HistoryManager()
         self.graph = self._build_graph()
-        self.history_manager.start_new_session()
     
     def _route(self, state: GraphState) -> str:
         return self.ROUTING_MAP.get(state.get("intent_result", "unknown"), "talk")
@@ -75,10 +72,9 @@ class ChatService:
     async def process_message(self, message: str, room_id: str):
         await self.verify_chatroom_exists(room_id)
         
-        history_context = self.history_manager.get_recent_context(3)
         final_result = None
         
-        for update in self.graph.stream({"input": message, "history": history_context}):
+        for update in self.graph.stream({"input": message, "history": ""}):
             for node_name, node_output in update.items():
                 if node_name != "intent":
                     if isinstance(node_output, dict) and "result" in node_output:
@@ -103,12 +99,6 @@ class ChatService:
             else:
                 response_data = result_data.get("response", "")
                 response_text = result_data.get("response", "")
-            
-            self.history_manager.add_history(
-                input=message,
-                response=response_text,
-                intent=intent
-            )
             
             chat_record = await self.save_to_database(
                 room_id=room_id,
