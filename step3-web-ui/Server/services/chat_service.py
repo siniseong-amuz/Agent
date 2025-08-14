@@ -137,6 +137,7 @@ class ChatService:
     
     async def save_to_database(self, room_id: str, input: str, intent: str, title: str = "", result: dict = None):
         async with AsyncSessionLocal() as session:
+            # 채팅 히스토리 저장
             chat_record = ChatHistory(
                 room_id=room_id,
                 input=input,
@@ -148,13 +149,27 @@ class ChatService:
             await session.commit()
             await session.refresh(chat_record)
             
+            # 채팅방 제목 업데이트 (첫 번째 메시지에서 title이 있는 경우)
+            if title and title.strip():
+                await self.update_chatroom_title_if_first_message(session, room_id, title)
+            
+            return chat_record
+    
+    async def update_chatroom_title_if_first_message(self, session, room_id: str, title: str):
+        count_result = await session.execute(
+            select(ChatHistory).where(ChatHistory.room_id == room_id)
+        )
+        message_count = len(count_result.scalars().all())
+        
+        # 첫 번째 메시지인 경우 채팅방 제목 업데이트
+        if message_count == 1:
             chatroom_result = await session.execute(
                 select(ChatRoom).where(ChatRoom.id == room_id)
             )
-            chatroom = chatroom_result.scalar_one()
-            await session.commit()
-            
-            return chat_record
+            chatroom = chatroom_result.scalar_one_or_none()
+            if chatroom and chatroom.title == "new chat":
+                chatroom.title = title
+                await session.commit()
     
     async def get_chat_history_by_room(self, room_id: str, limit: int = 50):
         async with AsyncSessionLocal() as session:
@@ -167,19 +182,16 @@ class ChatService:
             records = []
             for record in result.scalars().all():
                 record_dict = record.to_dict()
-                if isinstance(record_dict.get("result"), str):
-                    record_dict["result"] = {"response": record_dict["result"]}
                 
+                # result가 문자열인 경우에만 {"response": ...} 형태로 변환
                 result_data = record_dict.get("result")
                 if isinstance(result_data, str):
-                    response_text = result_data
-                else:
-                    response_text = result_data.get("response", "")
+                    result_data = {"response": result_data}
                 
                 simplified_record = {
                     "input": record_dict.get("input"),
                     "intent": record_dict.get("intent"),
-                    "result": {"response": response_text}
+                    "result": result_data  # 원본 result 구조 유지
                 }
                 records.append(simplified_record)
             return records

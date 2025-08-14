@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import Any
 from services.chat_service import ChatService
 
 router = APIRouter()
@@ -9,14 +10,11 @@ class ChatRequest(BaseModel):
     id: str
     message: str
 
-class ChatResult(BaseModel):
-    response: str
-
 class ChatResponse(BaseModel):
     id: str
     input: str
     intent: str
-    result: ChatResult
+    result: Any  # 다양한 형태의 result를 지원
 
 @router.post(
     "/chat",
@@ -30,16 +28,12 @@ async def chat(request: ChatRequest):
         result = await chat_service.process_message(request.message, request.id)
         
         response_data = result.get("response", {})
-        if isinstance(response_data, str):
-            response_text = response_data
-        else:
-            response_text = response_data.get("response", "")
         
         return ChatResponse(
             id=result.get("room_id"),
             input=request.message,
             intent=result.get("intent", ""),
-            result=ChatResult(response=response_text)
+            result=response_data  # 원본 response 구조 그대로 전달
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"처리 중 오류가 발생했습니다: {str(e)}")
