@@ -37,16 +37,16 @@ async def get_chatrooms():
         raise HTTPException(status_code=500, detail=f"채팅방 목록 조회 중 오류가 발생했습니다: {str(e)}")
 
 @router.delete(
-    "/chatrooms/{room_id}",
+    "/chatrooms/{id}",
     tags=["채팅방 관리 (Chatroom Management)"],
     summary="채팅방 삭제",
     description="특정 채팅방과 관련된 모든 메시지를 삭제합니다.",
 )
-async def delete_chatroom(room_id: str):
+async def delete_chatroom(id: str):
     try:
         async with AsyncSessionLocal() as session:
             result = await session.execute(
-                select(ChatRoom).where(ChatRoom.id == room_id)
+                select(ChatRoom).where(ChatRoom.id == id)
             )
             chatroom = result.scalar_one_or_none()
             

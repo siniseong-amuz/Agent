@@ -164,4 +164,22 @@ class ChatService:
                 .order_by(ChatHistory.created_at.asc())
                 .limit(limit)
             )
-            return [record.to_dict() for record in result.scalars().all()]
+            records = []
+            for record in result.scalars().all():
+                record_dict = record.to_dict()
+                if isinstance(record_dict.get("result"), str):
+                    record_dict["result"] = {"response": record_dict["result"]}
+                
+                result_data = record_dict.get("result")
+                if isinstance(result_data, str):
+                    response_text = result_data
+                else:
+                    response_text = result_data.get("response", "")
+                
+                simplified_record = {
+                    "input": record_dict.get("input"),
+                    "intent": record_dict.get("intent"),
+                    "result": {"response": response_text}
+                }
+                records.append(simplified_record)
+            return records
