@@ -15,7 +15,7 @@ class HistoryService:
         if not isinstance(result_data, dict):
             return str(result_data) if result_data else ""
         
-        if record.intent == "번역":
+        if record.intent == "translation":
             return result_data.get("translation", "")
         elif record.intent == "emotion":
             emotion = result_data.get("emotion", "")
@@ -39,7 +39,7 @@ class HistoryService:
             
             context_parts = []
             for record in reversed(records):
-                context_parts.append(f"사용자: {record.input}")
+                context_parts.append(f"User: {record.input}")
                 response_text = self._format_response_text(record)
                 context_parts.append(f"AI: {response_text}")
             

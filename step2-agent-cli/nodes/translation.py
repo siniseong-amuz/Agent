@@ -17,15 +17,15 @@ def get_translation_node(llm=None) -> RunnableLambda:
 
         title, original, translation = stream_translation(
             user_input=user_input,
-            intent="번역",
+            intent="translation",
             title_prompt=title_prompt_text,
             response_prompt=translation_prompt_text
         )
 
         return {
             "input": user_input,
-            "title": title or "번역",
-            "intent": "번역",
+            "title": title or "Translation",
+            "intent": "translation",
             "result": {
                 "original": original,
                 "translation": translation

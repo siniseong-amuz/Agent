@@ -87,7 +87,7 @@ class ChatService:
             intent = final_result.get("intent", "")
             result_data = final_result["result"]
             
-            if intent == "번역":
+            if intent == "translation":
                 response_data = {
                     "original": result_data.get("original", ""),
                     "translation": result_data.get("translation", "")

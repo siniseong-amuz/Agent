@@ -7,16 +7,16 @@ def get_emotion_node(llm=None) -> RunnableLambda:
         user_input = state["input"]
         history_context = state.get("history", "")
         
-        title_prompt_text = f"다음을 3~5단어로 간단히 제목만 출력: {user_input}"
+        title_prompt_text = f"Output only a simple title in 3-5 words for the following: {user_input}"
         
         emotion_prompt_text = (
-            f"텍스트의 주요 감정만 한 단어로 출력하세요: {user_input}\n\n"
-            f"(참고 맥락)\n{history_context}"
+            f"Output only the main emotion of the text in one word: {user_input}\n\n"
+            f"(Reference context)\n{history_context}"
         )
         
         message_prompt_text = (
-            f"다음 텍스트에 대해 공감하고 위로하는 메시지를 작성해주세요: {user_input}\n\n"
-            f"(참고 맥락)\n{history_context}"
+            f"Please write an empathetic and comforting message about the following text: {user_input}\n\n"
+            f"(Reference context)\n{history_context}"
         )
 
         title, emotion_response, message_response = stream_emotion(
@@ -29,7 +29,7 @@ def get_emotion_node(llm=None) -> RunnableLambda:
 
         return {
             "input": user_input,
-            "title": title or "감정분석",
+            "title": title or "Emotion Analysis",
             "intent": "emotion",
             "result": {
                 "response": emotion_response,
