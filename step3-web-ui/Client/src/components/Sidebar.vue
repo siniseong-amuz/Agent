@@ -5,7 +5,10 @@
       open ? 'translate-x-0' : '-translate-x-[244px]'
     ]"
   >
-    <div class="h-16 flex items-center px-5 text-[#dedede] font-semibold text-lg">Aero</div>
+    <div class="h-16 flex items-center px-5 text-[#dedede] font-semibold text-lg">
+      <img src="/logo.png" alt="Aero logo" class="w-6 h-6 mr-2" />
+      <span>Aero</span>
+    </div>
     <nav class="py-2 px-2 space-y-1">
       <button type="button" class="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg text-[#dedede] hover:bg-[#2a2a2a]">
         <img src="../assets/image/plus.svg" alt="새 채팅" class="w-4 h-4" />
