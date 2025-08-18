@@ -15,6 +15,9 @@
         <span>새 채팅</span>
       </button>
       <p type="button" class="block w-full text-left px-3 py-2 rounded-lg mt-6 text-[#cfcfcf]">기록</p>
+      <button type="button" class="flex items-center w-full text-left px-3 py-2 rounded-lg text-[#dedede] text-lg font-medium hover:bg-[#2a2a2a] transition-colors duration-200">
+        New Chat
+      </button>
     </nav>
     <button
       class="absolute top-4 -right-4 w-8 h-8 rounded-full bg-[#2a2a2a] text-[#979797] flex items-center justify-center shadow hover:bg-[#333]"
