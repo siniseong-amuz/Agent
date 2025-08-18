@@ -9,7 +9,7 @@
             v-model="message"
             type="text"
             placeholder="오늘은 어떤걸 도와드릴까요?"
-            class="w-full bg-[#303030] px-8 py-4.5 rounded-4xl focus:outline-none focus:ring-0 pr-16 text-[#d6d6d6] placeholder-[#a0a0a0]"
+            class="w-full bg-[#303030] px-8 py-4.5 rounded-4xl focus:outline-none focus:ring-0 pr-16 text-lg text-[#d6d6d6] placeholder-[#a0a0a0]"
             @keyup.enter="sendMessage"
           />
           <button 
