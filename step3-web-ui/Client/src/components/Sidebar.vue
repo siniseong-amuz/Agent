@@ -6,11 +6,15 @@
     ]"
   >
     <div class="h-16 flex items-center px-5 text-[#dedede] font-semibold text-lg">Aero</div>
-    <nav class="py-2 space-y-1">
-      <button type="button" class="block w-full text-left px-5 py-2 rounded-lg text-[#cfcfcf]">기록</button>
+    <nav class="py-2 px-2 space-y-1">
+      <button type="button" class="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg text-[#dedede] hover:bg-[#2a2a2a]">
+        <img src="../assets/image/plus.svg" alt="새 채팅" class="w-4 h-4" />
+        <span>새 채팅</span>
+      </button>
+      <p type="button" class="block w-full text-left px-3 py-2 rounded-lg mt-6 text-[#cfcfcf]">기록</p>
     </nav>
     <button
-      class="absolute top-4 -right-4 w-8 h-8 rounded-full bg-[#2a2a2a] text-[#dedede] flex items-center justify-center shadow hover:bg-[#333]"
+      class="absolute top-4 -right-4 w-8 h-8 rounded-full bg-[#2a2a2a] text-[#979797] flex items-center justify-center shadow hover:bg-[#333]"
       @click="$emit('toggle')"
       aria-label="Toggle sidebar"
     >
