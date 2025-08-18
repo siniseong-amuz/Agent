@@ -1,18 +1,19 @@
 <template>
-  <div class="min-h-screen bg-[#1E1E1E] flex flex-col">
-    <div class="flex-1 flex items-center justify-center flex-col pt-30">
+  <div class="min-h-screen bg-[#1E1E1E] flex flex-col pb-32">
+    <Header />
+    <div class="flex-1 flex items-center justify-center flex-col pt-24">
       <h1 class="text-4xl font-medium mb-2 gradient-text">안녕하세요, siniseong님</h1>
       <h1 class="text-4xl font-medium text-[#7c7c7c] mb-12">무엇을 도와드릴까요?</h1>
     </div>
 
-    <div class="w-full max-w-4xl flex items-start gap-2 px-4 mb-8 mx-auto">
+    <div class="fixed left-1/2 -translate-x-1/2 bottom-8 w-full max-w-4xl flex items-start gap-2 px-4 mx-auto">
       <div class="relative flex-1">
         <textarea
           ref="textareaRef"
           v-model="message"
           rows="1"
           placeholder="오늘은 어떤걸 도와드릴까요?"
-          class="w-full bg-[#303030] px-8 py-4.5 rounded-4xl focus:outline-none focus:ring-0 pr-16 text-lg text-[#dedede] placeholder-[#a0a0a0] resize-none overflow-hidden"
+          class="w-full bg-[#303030] px-8 py-4.5 rounded-4xl focus:outline-none focus:ring-0 pr-16 text-lg text-[#dedede] placeholder-[#a0a0a0] resize-none custom-scrollbar"
           @input="handleResizeHeight"
           @keydown="handleKeydown"
         />
@@ -29,15 +30,37 @@
 
 <script setup>
 import { ref, nextTick } from 'vue'
+import Header from './components/Header.vue'
 
 const message = ref('')
 const textareaRef = ref(null)
 
 const handleResizeHeight = () => {
   nextTick(() => {
-    if (textareaRef.value) {
-      textareaRef.value.style.height = 'auto'
-      textareaRef.value.style.height = textareaRef.value.scrollHeight + 'px'
+    const el = textareaRef.value
+    if (!el) return
+
+    el.style.height = 'auto'
+
+    const computed = window.getComputedStyle(el)
+    const lineHeight = parseFloat(computed.lineHeight) || 28
+    const paddingTop = parseFloat(computed.paddingTop) || 0
+    const paddingBottom = parseFloat(computed.paddingBottom) || 0
+    const maxVisibleLines = 10
+    const maxHeight = lineHeight * maxVisibleLines + paddingTop + paddingBottom
+
+    const newHeight = Math.min(el.scrollHeight, maxHeight)
+    el.style.height = newHeight + 'px'
+
+    const isOverflowing = el.scrollHeight > maxHeight
+    el.style.overflowY = isOverflowing ? 'auto' : 'hidden'
+
+    if (isOverflowing) {
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight
+      })
+    } else {
+      el.scrollTop = 0
     }
   })
 }
@@ -53,9 +76,34 @@ const sendMessage = () => {
   if (!message.value.trim()) return
   message.value = ''
   nextTick(() => {
-    if (textareaRef.value) {
-      textareaRef.value.style.height = 'auto'
+    const el = textareaRef.value
+    if (el) {
+      el.style.height = 'auto'
+      el.style.overflowY = 'hidden'
+      el.scrollTop = 0
     }
   })
 }
 </script>
+
+<style scoped>
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #8b8b8b transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #6b6b6b;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: #8b8b8b;
+}
+</style>
