@@ -1,12 +1,15 @@
 <template>
-  <div class="min-h-screen bg-[#1E1E1E] flex flex-col pb-32">
+  <div :class="['min-h-screen bg-[#1E1E1E] flex flex-col pb-32 transition-[padding] duration-300', isSidebarOpen ? 'pl-[260px]' : 'pl-0']">
+    <Sidebar :open="isSidebarOpen" @toggle="isSidebarOpen = !isSidebarOpen" />
     <Header />
     <div class="flex-1 flex items-center justify-center flex-col pt-24">
       <h1 class="text-4xl font-medium mb-2 gradient-text">안녕하세요, siniseong님</h1>
       <h1 class="text-4xl font-medium text-[#7c7c7c] mb-12">무엇을 도와드릴까요?</h1>
     </div>
-
-    <div class="fixed left-1/2 -translate-x-1/2 bottom-8 w-full max-w-4xl flex items-start gap-2 px-4 mx-auto">
+    <div
+      class="fixed left-0 right-0 bottom-8 w-full flex items-start gap-2 px-4 mx-auto transition-[padding,max-width] duration-300"
+      :style="{ maxWidth: isSidebarOpen ? '72rem' : '56rem', paddingLeft: isSidebarOpen ? '260px' : '0px' }"
+    >
       <div class="relative flex-1">
         <textarea
           ref="textareaRef"
@@ -31,9 +34,11 @@
 <script setup>
 import { ref, nextTick } from 'vue'
 import Header from './components/Header.vue'
+import Sidebar from './components/Sidebar.vue'
 
 const message = ref('')
 const textareaRef = ref(null)
+const isSidebarOpen = ref(true)
 
 const handleResizeHeight = () => {
   nextTick(() => {
