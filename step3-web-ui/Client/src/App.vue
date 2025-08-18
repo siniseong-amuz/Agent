@@ -23,21 +23,13 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'App',
-  data() {
-    return {
-      message: ''
-    }
-  },
-  methods: {
-    sendMessage() {
-      if (!this.message.trim()) return
-      this.message = ''
-    }
-  }
+<script setup>
+import { ref } from 'vue'
+
+const message = ref('')
+
+const sendMessage = () => {
+  if (!message.value.trim()) return
+  message.value = ''
 }
 </script>
-
-
