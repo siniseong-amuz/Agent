@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-[var(--bg)] flex flex-col pb-32 transition-[padding] duration-300 pl-0 md:pl-0" 
        :class="isSidebarOpen && !isMobile ? 'md:pl-[260px]' : ''">
-    <Sidebar :open="isSidebarOpen" @toggle="toggleSidebar" :is-mobile="isMobile" :is-dark="isDark" />
+    <Sidebar :open="isSidebarOpen" @toggle="toggleSidebar" @toggle-theme="toggleTheme" :is-mobile="isMobile" :is-dark="isDark" />
     <Header @toggle-sidebar="toggleSidebar" :is-mobile="isMobile" :is-dark="isDark" @toggle-theme="toggleTheme" />
     <div class="flex-1 flex items-center justify-center flex-col pt-24 px-4">
       <h1 class="font-semibold mb-2 gradient-text text-3xl md:text-4xl">안녕하세요, siniseong님</h1>

@@ -10,19 +10,6 @@
     ]">
       <img src="/logo.png" alt="Aero logo" class="w-6 h-6 mr-2" />
       <span>Aero</span>
-      <button
-        v-if="isMobile"
-        @click="$emit('toggle')"
-        :class="[
-          'absolute right-5 w-8 h-8 rounded-full flex items-center justify-center shadow',
-          isDark ? 'bg-[#2a2a2a] text-[#979797] hover:bg-[#333]' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-        ]"
-        aria-label="Close sidebar"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-          <path d="M5 12.75h14a.75.75 0 0 0 0-1.5H5a.75.75 0 0 0 0 1.5Z"/>
-        </svg>
-      </button>
     </div>
     <nav class="py-2 px-2 space-y-1">
       <button type="button" :class="[
@@ -46,13 +33,13 @@
       </button>
     </nav>
     <button
-      v-if="!isMobile"
       :class="[
-        'absolute top-4 -right-4 w-8 h-8 rounded-full flex items-center justify-center shadow',
+        'absolute top-4 w-8 h-8 rounded-full flex items-center justify-center shadow z-30',
+        'right-4 md:-right-4',
         isDark ? 'bg-[#2a2a2a] text-[#979797] hover:bg-[#333]' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
       ]"
       @click="$emit('toggle')"
-      aria-label="Toggle sidebar"
+      :aria-label="open ? '사이드바 닫기' : '사이드바 열기'"
     >
       <svg v-if="open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
         <path d="M5 12.75h14a.75.75 0 0 0 0-1.5H5a.75.75 0 0 0 0 1.5Z"/>
@@ -61,10 +48,16 @@
         <path d="M3.75 5.25h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1 0-1.5Zm0 6h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1 0-1.5Zm0 6h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1 0-1.5Z"/>
       </svg>
     </button>
+
+    <div class="absolute left-4 bottom-4">
+      <ThemeToggle :is-dark="isDark" @toggle="$emit('toggle-theme')" />
+    </div>
   </aside>
 </template>
 
 <script setup>
+import ThemeToggle from './ThemeToggle.vue'
+
 defineProps({
   open: {
     type: Boolean,
@@ -80,5 +73,5 @@ defineProps({
   }
 })
 
-defineEmits(['toggle'])
+defineEmits(['toggle', 'toggle-theme'])
 </script>

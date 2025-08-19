@@ -11,19 +11,13 @@
         </svg>
       </button>
       <div class="absolute inset-0 flex items-center justify-center text-[var(--text)] text-lg">title</div>
-      <button
-        class="absolute right-4 w-9 h-9 rounded-lg bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center hover:bg-[var(--hover)] transition-colors"
-        @click="$emit('toggle-theme')"
-        aria-label="Toggle theme"
-      >
-        <span v-if="isDark">☀️</span>
-        <span v-else>🌙</span>
-      </button>
+      
     </div>
   </header>
 </template>
 
 <script setup>
+
 defineProps({
   isMobile: {
     type: Boolean,
