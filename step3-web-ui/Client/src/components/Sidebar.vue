@@ -1,13 +1,22 @@
 <template>
   <aside
     :class="[
-      'fixed left-0 top-0 bottom-0 w-[260px] bg-[#151515] border-r border-[#2a2a2a] z-20 transition-transform duration-300',
-      open ? 'translate-x-0' : '-translate-x-[244px]'
+      'fixed left-0 top-0 bottom-0 bg-[#151515] border-r border-[#2a2a2a] transition-transform duration-300',
+      isMobile ? 'w-full z-20' : 'w-[260px] z-20',
+      open ? 'translate-x-0' : isMobile ? '-translate-x-full' : '-translate-x-[244px]'
     ]"
   >
-    <div class="h-16 flex items-center px-5 text-[#dedede] font-semibold text-lg">
+    <div class="h-16 flex items-center px-5 text-[#dedede] font-semibold text-lg relative">
       <img src="/logo.png" alt="Aero logo" class="w-6 h-6 mr-2" />
       <span>Aero</span>
+      <button
+        v-if="isMobile"
+        @click="$emit('toggle')"
+        class="absolute right-5 w-8 h-8 rounded-full bg-[#2a2a2a] text-[#979797] flex items-center justify-center shadow hover:bg-[#333]"
+        aria-label="Close sidebar"
+      >
+        <img src="../assets/image/minus.svg" alt="닫기" class="w-5 h-5" />
+      </button>
     </div>
     <nav class="py-2 px-2 space-y-1">
       <button type="button" class="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg text-[#dedede] hover:bg-[#2a2a2a]">
@@ -20,6 +29,7 @@
       </button>
     </nav>
     <button
+      v-if="!isMobile"
       class="absolute top-4 -right-4 w-8 h-8 rounded-full bg-[#2a2a2a] text-[#979797] flex items-center justify-center shadow hover:bg-[#333]"
       @click="$emit('toggle')"
       aria-label="Toggle sidebar"
@@ -35,6 +45,10 @@ defineProps({
   open: {
     type: Boolean,
     default: true
+  },
+  isMobile: {
+    type: Boolean,
+    default: false
   }
 })
 

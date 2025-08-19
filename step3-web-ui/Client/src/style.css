@@ -30,3 +30,18 @@ body {
         background-position: 0% 50%;
     }
 }
+
+@media (max-width: 767px) {
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    button, input, textarea {
+        touch-action: manipulation;
+    }
+    
+    html {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+    }
+}

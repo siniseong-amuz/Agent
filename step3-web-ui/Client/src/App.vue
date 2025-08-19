@@ -1,15 +1,19 @@
 <template>
-  <div :class="['min-h-screen bg-[#1E1E1E] flex flex-col pb-32 transition-[padding] duration-300', isSidebarOpen ? 'pl-[260px]' : 'pl-0']">
-    <Sidebar :open="isSidebarOpen" @toggle="isSidebarOpen = !isSidebarOpen" />
-    <Header />
-    <div class="flex-1 flex items-center justify-center flex-col pt-24">
-      <h1 class="text-4xl font-medium mb-2 gradient-text">안녕하세요, siniseong님</h1>
-      <h1 class="text-4xl font-medium text-[#7c7c7c] mb-12">무엇을 도와드릴까요?</h1>
+  <div :class="['min-h-screen bg-[#1E1E1E] flex flex-col pb-32 transition-[padding] duration-300', 
+    isSidebarOpen && !isMobile ? 'pl-[260px]' : 'pl-0']">
+    <Sidebar :open="isSidebarOpen" @toggle="toggleSidebar" :is-mobile="isMobile" />
+    <Header @toggle-sidebar="toggleSidebar" :is-mobile="isMobile" />
+    <div class="flex-1 flex items-center justify-center flex-col pt-24 px-4">
+      <h1 :class="['font-medium mb-2 gradient-text', 
+        isMobile ? 'text-3xl' : 'text-4xl']">안녕하세요, siniseong님</h1>
+      <h1 :class="['font-medium text-[#7c7c7c] mb-12',
+        isMobile ? 'text-3xl' : 'text-4xl']">무엇을 도와드릴까요?</h1>
     </div>
     <div
       :class="[
-        'fixed left-0 right-0 bottom-14 w-full flex items-start gap-2 px-4 mx-auto transition-[padding,max-width] duration-300',
-        isSidebarOpen ? 'max-w-[72rem] pl-[260px]' : 'max-w-[56rem] pl-0'
+        'fixed left-0 right-0 bottom-14 w-full flex items-start gap-2 mx-auto transition-[padding,max-width] duration-300',
+        isMobile ? 'px-4 max-w-full' : 
+        isSidebarOpen ? 'max-w-[72rem] pl-[260px] px-4' : 'max-w-[56rem] pl-0 px-4'
       ]"
     >
       <div class="relative flex-1">
@@ -18,25 +22,27 @@
           v-model="message"
           rows="1"
           placeholder="오늘은 어떤걸 도와드릴까요?"
-          class="w-full bg-[#303030] px-8 py-4.5 rounded-4xl focus:outline-none focus:ring-0 pr-16 text-lg text-[#dedede] placeholder-[#a0a0a0] resize-none custom-scrollbar"
+          :class="['w-full bg-[#303030] rounded-4xl focus:outline-none focus:ring-0 text-[#dedede] placeholder-[#a0a0a0] resize-none custom-scrollbar',
+            isMobile ? 'px-4 py-3 pr-12 text-base' : 'px-8 py-4.5 pr-16 text-lg']"
           @input="handleResizeHeight"
           @keydown="handleKeydown"
         />
         <button 
           @click="sendMessage"
-          class="absolute right-4 bottom-4 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer"
+          :class="['absolute bottom-3 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer',
+            isMobile ? 'right-3 w-8 h-8' : 'right-4 bottom-4 w-10 h-10']"
         >
-          <img src="./assets/image/send-icon.svg" alt="Send" class="w-5 h-5 send-icon" />
+          <img src="./assets/image/send-icon.svg" alt="Send" :class="isMobile ? 'w-4 h-4' : 'w-5 h-5'" />
         </button>
       </div>
     </div>
     
-    <Footer :is-sidebar-open="isSidebarOpen" />
+    <Footer :is-sidebar-open="isSidebarOpen && !isMobile" :is-mobile="isMobile" />
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import Header from './components/Header.vue'
 import Sidebar from './components/Sidebar.vue'
 import Footer from './components/Footer.vue'
@@ -44,6 +50,36 @@ import Footer from './components/Footer.vue'
 const message = ref('')
 const textareaRef = ref(null)
 const isSidebarOpen = ref(true)
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+  if (isMobile.value) {
+    isSidebarOpen.value = false
+  }
+}
+
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value
+}
+
+watch([isMobile, isSidebarOpen], ([mobile, sidebarOpen]) => {
+  if (mobile && sidebarOpen) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+})
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+  document.body.style.overflow = ''
+})
 
 const handleResizeHeight = () => {
   nextTick(() => {
