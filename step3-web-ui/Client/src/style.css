@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+:root {
+    --bg: #ffffff;
+    --text: #111827;
+    --subtext: #6b7280;
+    --surface: #f3f4f6;
+    --surface-2: #e5e7eb;
+    --border: #e5e7eb;
+    --hover: #f3f4f6;
+}
+
+.dark {
+    --bg: #1E1E1E;
+    --text: #dedede;
+    --subtext: #7c7c7c;
+    --surface: #303030;
+    --surface-2: #2a2a2a;
+    --border: #2a2a2a;
+    --hover: #2a2a2a;
+}
+
 @font-face {
     font-family: 'Pretendard-Regular';
     src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');

@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-[#1E1E1E] flex flex-col pb-32 transition-[padding] duration-300 pl-0 md:pl-0" 
+  <div class="min-h-screen bg-[var(--bg)] flex flex-col pb-32 transition-[padding] duration-300 pl-0 md:pl-0" 
        :class="isSidebarOpen && !isMobile ? 'md:pl-[260px]' : ''">
-    <Sidebar :open="isSidebarOpen" @toggle="toggleSidebar" :is-mobile="isMobile" />
-    <Header @toggle-sidebar="toggleSidebar" :is-mobile="isMobile" />
+    <Sidebar :open="isSidebarOpen" @toggle="toggleSidebar" :is-mobile="isMobile" :is-dark="isDark" />
+    <Header @toggle-sidebar="toggleSidebar" :is-mobile="isMobile" :is-dark="isDark" @toggle-theme="toggleTheme" />
     <div class="flex-1 flex items-center justify-center flex-col pt-24 px-4">
       <h1 class="font-semibold mb-2 gradient-text text-3xl md:text-4xl">안녕하세요, siniseong님</h1>
-      <h1 class="font-medium text-[#7c7c7c] mb-12 text-3xl md:text-4xl">무엇을 도와드릴까요?</h1>
+      <h1 class="font-medium text-gray-600 dark:text-[#7c7c7c] mb-12 text-3xl md:text-4xl">무엇을 도와드릴까요?</h1>
     </div>
     <div class="fixed left-0 right-0 bottom-14 w-full flex items-start gap-2 mx-auto transition-[padding,max-width] duration-300 px-4 max-w-full md:max-w-[56rem] md:pl-0"
          :class="isSidebarOpen && !isMobile ? 'md:max-w-[72rem] md:pl-[260px]' : ''">
@@ -15,15 +15,20 @@
           v-model="message"
           rows="1"
           placeholder="오늘은 어떤걸 도와드릴까요?"
-          class="w-full bg-[#303030] rounded-4xl focus:outline-none focus:ring-0 text-[#dedede] placeholder-[#a0a0a0] resize-none custom-scrollbar px-4 py-3 pr-12 text-base md:px-8 md:py-4.5 md:pr-16 md:text-lg"
+          class="w-full bg-[var(--surface)] rounded-4xl focus:outline-none focus:ring-0 text-[var(--text)] placeholder-[var(--subtext)] resize-none custom-scrollbar px-4 py-3 pr-12 text-base md:px-8 md:py-4.5 md:pr-16 md:text-lg"
           @input="handleResizeHeight"
           @keydown="handleKeydown"
         />
         <button 
           @click="sendMessage"
-          class="absolute bottom-3 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer right-3 w-8 h-8 md:right-4 md:bottom-4 md:w-10 md:h-10"
+          :class="[
+            'absolute bottom-3 rounded-full flex items-center justify-center transition-colors cursor-pointer right-3 w-8 h-8 md:right-4 md:bottom-4 md:w-10 md:h-10',
+            isDark ? 'bg-gray-200 hover:bg-gray-300' : 'bg-black hover:bg-gray-800'
+          ]"
         >
-          <img src="./assets/image/send-icon.svg" alt="Send" class="w-4 h-4 md:w-5 md:h-5" />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" :class="['w-4 h-4 md:w-5 md:h-5', isDark ? 'text-gray-800' : 'text-white']">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+          </svg>
         </button>
       </div>
     </div>
@@ -42,6 +47,7 @@ const message = ref('')
 const textareaRef = ref(null)
 const isSidebarOpen = ref(true)
 const isMobile = ref(false)
+const isDark = ref(false)
 
 const checkMobile = () => {
   const wasMobile = isMobile.value
@@ -67,6 +73,16 @@ watch([isMobile, isSidebarOpen], ([mobile, sidebarOpen]) => {
 onMounted(() => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
+
+  const stored = localStorage.getItem('theme')
+  if (stored === 'dark') {
+    isDark.value = true
+  } else if (stored === 'light') {
+    isDark.value = false
+  } else {
+    isDark.value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+  }
+  document.documentElement.classList.toggle('dark', isDark.value)
 })
 
 onUnmounted(() => {
@@ -122,6 +138,12 @@ const sendMessage = () => {
       el.scrollTop = 0
     }
   })
+}
+
+const toggleTheme = () => {
+  isDark.value = !isDark.value
+  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+  document.documentElement.classList.toggle('dark', isDark.value)
 }
 </script>
 

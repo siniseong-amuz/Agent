@@ -4,11 +4,21 @@
       <button
         v-if="isMobile"
         @click="$emit('toggle-sidebar')"
-        class="mr-4 w-8 h-8 flex items-center justify-center text-[#dedede] hover:bg-[#2a2a2a] rounded-lg transition-colors z-10"
+        class="mr-4 w-8 h-8 flex items-center justify-center text-[var(--text)] hover:bg-[var(--hover)] rounded-lg transition-colors z-10"
       >
-        <img src="../assets/image/bars.svg" alt="메뉴" class="w-5 h-5" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+          <path d="M3.75 5.25h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1 0-1.5Zm0 6h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1 0-1.5Zm0 6h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1 0-1.5Z"/>
+        </svg>
       </button>
-      <div class="absolute inset-0 flex items-center justify-center text-[#dedede] text-lg">title</div>
+      <div class="absolute inset-0 flex items-center justify-center text-[var(--text)] text-lg">title</div>
+      <button
+        class="absolute right-4 w-9 h-9 rounded-lg bg-[var(--surface-2)] text-[var(--text)] flex items-center justify-center hover:bg-[var(--hover)] transition-colors"
+        @click="$emit('toggle-theme')"
+        aria-label="Toggle theme"
+      >
+        <span v-if="isDark">☀️</span>
+        <span v-else>🌙</span>
+      </button>
     </div>
   </header>
 </template>
@@ -18,8 +28,12 @@ defineProps({
   isMobile: {
     type: Boolean,
     default: false
+  },
+  isDark: {
+    type: Boolean,
+    default: false
   }
 })
 
-defineEmits(['toggle-sidebar'])
+defineEmits(['toggle-sidebar', 'toggle-theme'])
 </script>
