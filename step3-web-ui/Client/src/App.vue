@@ -52,7 +52,7 @@ const checkMobile = () => {
   }
 }
 
-const toggleSidebar = () => {ㅎ
+const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
 }
 
