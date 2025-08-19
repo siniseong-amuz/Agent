@@ -7,8 +7,10 @@
       <h1 class="text-4xl font-medium text-[#7c7c7c] mb-12">무엇을 도와드릴까요?</h1>
     </div>
     <div
-      class="fixed left-0 right-0 bottom-8 w-full flex items-start gap-2 px-4 mx-auto transition-[padding,max-width] duration-300"
-      :style="{ maxWidth: isSidebarOpen ? '72rem' : '56rem', paddingLeft: isSidebarOpen ? '260px' : '0px' }"
+      :class="[
+        'fixed left-0 right-0 bottom-14 w-full flex items-start gap-2 px-4 mx-auto transition-[padding,max-width] duration-300',
+        isSidebarOpen ? 'max-w-[72rem] pl-[260px]' : 'max-w-[56rem] pl-0'
+      ]"
     >
       <div class="relative flex-1">
         <textarea
@@ -28,6 +30,8 @@
         </button>
       </div>
     </div>
+    
+    <Footer :is-sidebar-open="isSidebarOpen" />
   </div>
 </template>
 
@@ -35,6 +39,7 @@
 import { ref, nextTick } from 'vue'
 import Header from './components/Header.vue'
 import Sidebar from './components/Sidebar.vue'
+import Footer from './components/Footer.vue'
 
 const message = ref('')
 const textareaRef = ref(null)
