@@ -1,11 +1,6 @@
 <template>
-  <aside
-    :class="[
-      'fixed left-0 top-0 bottom-0 bg-[#151515] border-r border-[#2a2a2a] transition-transform duration-300',
-      isMobile ? 'w-full z-20' : 'w-[260px] z-20',
-      open ? 'translate-x-0' : isMobile ? '-translate-x-full' : '-translate-x-[244px]'
-    ]"
-  >
+  <aside class="fixed left-0 top-0 bottom-0 bg-[#151515] border-r border-[#2a2a2a] transition-transform duration-300 w-full z-20 md:w-[260px]"
+         :class="open ? 'translate-x-0' : 'md:-translate-x-[244px] -translate-x-full'">
     <div class="h-16 flex items-center px-5 text-[#dedede] font-semibold text-lg relative">
       <img src="/logo.png" alt="Aero logo" class="w-6 h-6 mr-2" />
       <span>Aero</span>

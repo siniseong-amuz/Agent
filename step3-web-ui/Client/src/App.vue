@@ -1,38 +1,29 @@
 <template>
-  <div :class="['min-h-screen bg-[#1E1E1E] flex flex-col pb-32 transition-[padding] duration-300', 
-    isSidebarOpen && !isMobile ? 'pl-[260px]' : 'pl-0']">
+  <div class="min-h-screen bg-[#1E1E1E] flex flex-col pb-32 transition-[padding] duration-300 pl-0 md:pl-0" 
+       :class="isSidebarOpen && !isMobile ? 'md:pl-[260px]' : ''">
     <Sidebar :open="isSidebarOpen" @toggle="toggleSidebar" :is-mobile="isMobile" />
     <Header @toggle-sidebar="toggleSidebar" :is-mobile="isMobile" />
     <div class="flex-1 flex items-center justify-center flex-col pt-24 px-4">
-      <h1 :class="['font-medium mb-2 gradient-text', 
-        isMobile ? 'text-3xl' : 'text-4xl']">안녕하세요, siniseong님</h1>
-      <h1 :class="['font-medium text-[#7c7c7c] mb-12',
-        isMobile ? 'text-3xl' : 'text-4xl']">무엇을 도와드릴까요?</h1>
+      <h1 class="font-semibold mb-2 gradient-text text-3xl md:text-4xl">안녕하세요, siniseong님</h1>
+      <h1 class="font-medium text-[#7c7c7c] mb-12 text-3xl md:text-4xl">무엇을 도와드릴까요?</h1>
     </div>
-    <div
-      :class="[
-        'fixed left-0 right-0 bottom-14 w-full flex items-start gap-2 mx-auto transition-[padding,max-width] duration-300',
-        isMobile ? 'px-4 max-w-full' : 
-        isSidebarOpen ? 'max-w-[72rem] pl-[260px] px-4' : 'max-w-[56rem] pl-0 px-4'
-      ]"
-    >
+    <div class="fixed left-0 right-0 bottom-14 w-full flex items-start gap-2 mx-auto transition-[padding,max-width] duration-300 px-4 max-w-full md:max-w-[56rem] md:pl-0"
+         :class="isSidebarOpen && !isMobile ? 'md:max-w-[72rem] md:pl-[260px]' : ''">
       <div class="relative flex-1">
         <textarea
           ref="textareaRef"
           v-model="message"
           rows="1"
           placeholder="오늘은 어떤걸 도와드릴까요?"
-          :class="['w-full bg-[#303030] rounded-4xl focus:outline-none focus:ring-0 text-[#dedede] placeholder-[#a0a0a0] resize-none custom-scrollbar',
-            isMobile ? 'px-4 py-3 pr-12 text-base' : 'px-8 py-4.5 pr-16 text-lg']"
+          class="w-full bg-[#303030] rounded-4xl focus:outline-none focus:ring-0 text-[#dedede] placeholder-[#a0a0a0] resize-none custom-scrollbar px-4 py-3 pr-12 text-base md:px-8 md:py-4.5 md:pr-16 md:text-lg"
           @input="handleResizeHeight"
           @keydown="handleKeydown"
         />
         <button 
           @click="sendMessage"
-          :class="['absolute bottom-3 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer',
-            isMobile ? 'right-3 w-8 h-8' : 'right-4 bottom-4 w-10 h-10']"
+          class="absolute bottom-3 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer right-3 w-8 h-8 md:right-4 md:bottom-4 md:w-10 md:h-10"
         >
-          <img src="./assets/image/send-icon.svg" alt="Send" :class="isMobile ? 'w-4 h-4' : 'w-5 h-5'" />
+          <img src="./assets/image/send-icon.svg" alt="Send" class="w-4 h-4 md:w-5 md:h-5" />
         </button>
       </div>
     </div>
@@ -53,13 +44,15 @@ const isSidebarOpen = ref(true)
 const isMobile = ref(false)
 
 const checkMobile = () => {
+  const wasMobile = isMobile.value
   isMobile.value = window.innerWidth < 768
-  if (isMobile.value) {
+  
+  if (!wasMobile && isMobile.value) {
     isSidebarOpen.value = false
   }
 }
 
-const toggleSidebar = () => {
+const toggleSidebar = () => {ㅎ
   isSidebarOpen.value = !isSidebarOpen.value
 }
 
