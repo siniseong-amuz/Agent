@@ -3,7 +3,7 @@ export const parseAIResponse = (response) => {
   
   if (typeof response === 'object') {
     if (response.original && response.translation) {
-      return `원문: ${response.original}\n번역문: ${response.translation}`;
+      return { type: 'translation', original: response.original, translation: response.translation };
     }
     
     if (response.response) {
@@ -17,7 +17,7 @@ export const parseAIResponse = (response) => {
     const parsed = JSON.parse(response);
     
     if (parsed.original && parsed.translation) {
-      return `원문: ${parsed.original}\n번역문: ${parsed.translation}`;
+      return { type: 'translation', original: parsed.original, translation: parsed.translation };
     }
     
     if (parsed.response) {

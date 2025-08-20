@@ -7,6 +7,7 @@
           :key="index" 
           :message="message" 
         />
+        <div class="h-20"></div>
       </div>
     </div>
   </div>

@@ -18,8 +18,19 @@
             <span class="font-medium"></span> {{ message.intent }}
           </div>
           
-          <div class="text-xl text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
-            {{ parseAIResponse(message.result) }}
+          <div class="text-xl text-[var(--text)] whitespace-pre-wrap">
+            <template v-if="typeof parseAIResponse(message.result) === 'object' && parseAIResponse(message.result).type === 'translation'">
+              <div class="translation-container">
+                <div class="original-text">원문: {{ parseAIResponse(message.result).original }}</div>
+                <div class="translation-text">
+                  번역문: 
+                  <span class="highlighted-text">{{ parseAIResponse(message.result).translation }}</span>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              {{ parseAIResponse(message.result) }}
+            </template>
           </div>
         </div>
         <div class="text-xs text-gray-500 mt-1">
@@ -64,3 +75,27 @@ const formatTime = (timestamp) => {
   }
 };
 </script>
+
+<style scoped>
+.translation-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.original-text {
+  margin-bottom: 4px;
+}
+
+.translation-text {
+  margin-top: 4px;
+}
+
+.highlighted-text {
+  background: linear-gradient(to top, rgba(59, 130, 246, 0.3) 50%, transparent 50%);
+  padding: 2px 6px;
+  display: inline;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+</style>
