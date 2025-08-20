@@ -47,7 +47,12 @@
           role="button"
           tabindex="0"
         >
-          <span class="flex-1 truncate">{{ chatroom.title }}</span>
+          <span class="flex-1 truncate">
+            <span v-if="isTyping && chatroom.id === chatrooms[0]?.id" class="typing-text">
+              {{ typingText }}<span class="cursor">|</span>
+            </span>
+            <span v-else>{{ chatroom.title }}</span>
+          </span>
           <span
             class="opacity-0 group-hover:opacity-100 transition-opacity"
             @click.stop="deleteChatroom(chatroom.id)"
@@ -90,6 +95,8 @@
 <script setup>
 import ThemeToggle from './ThemeToggle.vue';
 import { useChatrooms } from '../state/chatroomsStore.js';
+import { ref } from 'vue';
+import { startTypingAnimation } from '../utils/typingAnimation.js';
 
 const props = defineProps({
   open: { type: Boolean, default: true },
@@ -100,14 +107,31 @@ const emit = defineEmits(['toggle', 'toggle-theme', 'select-chat']);
 
 const { chatrooms, loading, error, fetchChatrooms, createChat, deleteChatroom } = useChatrooms();
 
+const typingText = ref('');
+const isTyping = ref(false);
+
 const handleChatSelect = (chatId) => {
   emit('select-chat', chatId);
 };
 
 const handleCreateChat = async () => {
-  await createChat();
-  if (chatrooms.value.length > 0) {
-    emit('select-chat', chatrooms.value[0].id);
+  const newChat = await createChat();
+  if (newChat) {
+    emit('select-chat', newChat.id);
+    
+    startTypingAnimation(
+      newChat.title,
+      (text) => {
+        isTyping.value = true;
+        typingText.value = text;
+      },
+      () => {
+        isTyping.value = false;
+        typingText.value = '';
+      },
+      80,
+      200
+    );
   }
 };
 
@@ -120,5 +144,14 @@ defineExpose({ refreshChatrooms: fetchChatrooms });
 }
 .custom-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+.cursor {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 </style>

@@ -55,8 +55,10 @@ export function useChatrooms() {
     if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
       const created = await res.json();
       store.set(chatroomsAtom, [created, ...store.get(chatroomsAtom)]);
+      return created;
     } else {
       store.set(errorAtom, '새 채팅을 생성할 수 없습니다.');
+      return null;
     }
   };
 
