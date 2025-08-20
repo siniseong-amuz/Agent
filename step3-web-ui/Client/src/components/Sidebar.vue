@@ -28,7 +28,11 @@
 
       <p :class="['block w-full text-left px-3 py-2 rounded-lg mt-6', isDark ? 'text-[#cfcfcf]' : 'text-gray-600']">기록</p>
 
-      <div v-if="loading" :class="['px-3 py-2', isDark ? 'text-[#979797]' : 'text-gray-500']">
+      <div v-if="!isInitialized" :class="['px-3 py-2', isDark ? 'text-[#979797]' : 'text-gray-500']">
+        <div class="animate-pulse">채팅방을 불러오는 중...</div>
+      </div>
+
+      <div v-else-if="loading" :class="['px-3 py-2', isDark ? 'text-[#979797]' : 'text-gray-500']">
         <div class="animate-pulse">채팅방을 불러오는 중...</div>
       </div>
 
@@ -67,7 +71,7 @@
         </div>
       </div>
 
-      <div v-if="!loading && !error && chatrooms.length === 0" :class="['px-3 py-2 text-sm', isDark ? 'text-[#979797]' : 'text-gray-500']">채팅방이 없습니다.</div>
+      <div v-if="isInitialized && !loading && !error && chatrooms.length === 0" :class="['px-3 py-2 text-sm', isDark ? 'text-[#979797]' : 'text-gray-500']">채팅방이 없습니다.</div>
     </nav>
 
     <button
@@ -95,7 +99,7 @@
 <script setup>
 import ThemeToggle from './ThemeToggle.vue';
 import { useChatrooms } from '../state/chatroomsStore.js';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { startTypingAnimation } from '../utils/typingAnimation.js';
 
 const props = defineProps({
@@ -109,6 +113,21 @@ const { chatrooms, loading, error, fetchChatrooms, createChat, deleteChatroom } 
 
 const typingText = ref('');
 const isTyping = ref(false);
+
+// 저장된 데이터가 있으면 즉시 사용하고, 없으면 API 호출
+const isInitialized = ref(false);
+
+onMounted(() => {
+  // 저장된 데이터가 있으면 즉시 사용
+  if (chatrooms.value.length > 0) {
+    isInitialized.value = true;
+  } else {
+    // 저장된 데이터가 없으면 API 호출 후 초기화 완료
+    fetchChatrooms().then(() => {
+      isInitialized.value = true;
+    });
+  }
+});
 
 const handleChatSelect = (chatId) => {
   emit('select-chat', chatId);

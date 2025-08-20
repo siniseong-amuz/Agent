@@ -3,8 +3,21 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 export const store = createStore();
 
-export const chatHistoryAtom = atom([]);
-export const currentChatIdAtom = atom(null);
+const getStoredChatHistory = () => {
+  try {
+    const stored = localStorage.getItem('chatHistory');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const getStoredCurrentChatId = () => {
+  return localStorage.getItem('currentChatId') || null;
+};
+
+export const chatHistoryAtom = atom(getStoredChatHistory());
+export const currentChatIdAtom = atom(getStoredCurrentChatId());
 export const historyLoadingAtom = atom(false);
 export const historyErrorAtom = atom(null);
 
@@ -27,6 +40,8 @@ export function useChatHistory() {
     store.set(historyLoadingAtom, true);
     store.set(historyErrorAtom, null);
     store.set(currentChatIdAtom, chatId);
+    
+    localStorage.setItem('currentChatId', chatId);
 
     try {
       const res = await fetch(`${apiUrl}/history/${encodeURIComponent(chatId)}?limit=${limit}`, {
@@ -39,14 +54,19 @@ export function useChatHistory() {
 
       if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
         const data = await res.json();
-        store.set(chatHistoryAtom, Array.isArray(data) ? data : []);
+        const historyData = Array.isArray(data) ? data : [];
+        store.set(chatHistoryAtom, historyData);
+        
+        localStorage.setItem('chatHistory', JSON.stringify(historyData));
       } else {
         store.set(historyErrorAtom, '채팅 히스토리를 불러올 수 없습니다.');
         store.set(chatHistoryAtom, []);
+        localStorage.setItem('chatHistory', JSON.stringify([]));
       }
     } catch (error) {
       store.set(historyErrorAtom, '채팅 히스토리를 불러올 수 없습니다.');
       store.set(chatHistoryAtom, []);
+      localStorage.setItem('chatHistory', JSON.stringify([]));
     } finally {
       store.set(historyLoadingAtom, false);
     }
@@ -56,9 +76,17 @@ export function useChatHistory() {
     store.set(chatHistoryAtom, []);
     store.set(currentChatIdAtom, null);
     store.set(historyErrorAtom, null);
+    localStorage.removeItem('chatHistory');
+    localStorage.removeItem('currentChatId');
   };
 
+  const addMessageToHistory = (message) => {
+    const currentHistory = store.get(chatHistoryAtom);
+    const updatedHistory = [...currentHistory, message];
+    store.set(chatHistoryAtom, updatedHistory);
 
+    localStorage.setItem('chatHistory', JSON.stringify(updatedHistory));
+  };
 
   onMounted(() => {
     unsubHistory = store.sub(chatHistoryAtom, () => (chatHistory.value = store.get(chatHistoryAtom)));
@@ -85,6 +113,7 @@ export function useChatHistory() {
     historyLoading, 
     historyError, 
     fetchChatHistory, 
-    clearChatHistory
+    clearChatHistory,
+    addMessageToHistory
   };
 }

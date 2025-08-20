@@ -12,7 +12,10 @@
     <Header @toggle-sidebar="toggleSidebar" :is-mobile="isMobile" :is-dark="isDark" @toggle-theme="toggleTheme" :title="currentChatTitle" />
     
     <div class="flex-1 flex flex-col pt-8">
-      <div v-if="!currentChatId || (currentChatId && (!chatHistory || chatHistory.length === 0))" class="flex-1 flex items-center justify-center flex-col px-4">
+      <div v-if="!isInitialized" class="flex-1 flex items-center justify-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+      </div>
+      <div v-else-if="!currentChatId || (currentChatId && (!chatHistory || chatHistory.length === 0))" class="flex-1 flex items-center justify-center flex-col px-4">
         <h1 class="font-semibold mb-2 gradient-text text-3xl md:text-4xl">안녕하세요, siniseong님</h1>
         <h1 class="font-medium text-gray-600 dark:text-[#7c7c7c] mb-12 text-3xl md:text-4xl">무엇을 도와드릴까요?</h1>
       </div>
@@ -80,6 +83,9 @@ const currentChatTitle = computed(() => {
   return currentChat ? currentChat.title : 'New Chat'
 })
 
+// 새로고침 시 즉시 상태 복원
+const isInitialized = ref(false)
+
 watch(() => route.params.id, async (newChatId) => {
   if (newChatId && newChatId !== currentChatId.value) {
     await fetchChatHistory(newChatId)
@@ -121,7 +127,8 @@ onMounted(() => {
   } else {
     isDark.value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
   }
-  document.documentElement.classList.toggle('dark', isDark.value)
+  
+  isInitialized.value = true
 })
 
 onUnmounted(() => {
