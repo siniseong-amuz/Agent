@@ -15,7 +15,7 @@
             <span class="font-medium"></span> {{ message.intent }}
           </div>
           
-          <div class="text-xl text-[var(--text)] whitespace-pre-wrap">
+          <div class="text-xl text-[var(--text)] whitespace-normal">
             <template v-if="typeof parseAIResponse(message.result) === 'object' && parseAIResponse(message.result).type === 'translation'">
               <div class="translation-container">
                 <div class="original-text">
@@ -29,10 +29,11 @@
               </div>
             </template>
             <template v-else-if="typeof message.result === 'object' && message.result.emotion && message.result.message">
+              <div class="text-gray-500 dark:text-gray-400 mb-1 whitespace-normal">감정 분석 결과: {{ message.result.emotion }}<template v-if="message.result.confidence"> (정확도: {{ formatConfidence(message.result.confidence) }})</template></div>
               <div class="whitespace-pre-wrap">{{ message.result.message }}</div>
             </template>
             <template v-else>
-              {{ parseAIResponse(message.result) }}
+              <div class="whitespace-pre-wrap">{{ parseAIResponse(message.result) }}</div>
             </template>
           </div>
         </div>
@@ -50,6 +51,14 @@ const props = defineProps({
     required: true
   }
 });
+
+const formatConfidence = (value) => {
+  const num = Number(value);
+  if (Number.isNaN(num)) return value;
+  if (num <= 1) return `${Math.round(num * 100)}%`;
+  if (num <= 100) return `${Math.round(num)}%`;
+  return value;
+};
 </script>
 
 <style scoped>

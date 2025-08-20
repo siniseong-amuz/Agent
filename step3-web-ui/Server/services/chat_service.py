@@ -97,9 +97,10 @@ class ChatService:
             elif intent == "emotion":
                 response_data = {
                     "emotion": result_data.get("response", ""),
-                    "message": result_data.get("message", "")
+                    "message": result_data.get("message", ""),
+                    "confidence": result_data.get("confidence", "")
                 }
-                response_text = f"{result_data.get('response', '')} - {result_data.get('message', '')}"
+                response_text = f"{result_data.get('response', '')} - {result_data.get('message', '')} ({result_data.get('confidence', '')})"
             else:
                 response_data = result_data.get("response", "")
                 response_text = result_data.get("response", "")

@@ -19,7 +19,7 @@ def get_emotion_node(llm=None) -> RunnableLambda:
             f"(참고 맥락)\n{history_context}"
         )
 
-        title, emotion_response, message_response = stream_emotion(
+        title, emotion_response, message_response, confidence = stream_emotion(
             user_input=user_input,
             intent="emotion",
             title_prompt=title_prompt_text,
@@ -30,10 +30,11 @@ def get_emotion_node(llm=None) -> RunnableLambda:
         return {
             "input": user_input,
             "title": title or "감정분석",
-            "intent": "emotion",
+            "intent": "감정 분석",
             "result": {
                 "response": emotion_response,
-                "message": message_response
+                "message": message_response,
+                "confidence": confidence
             }
         }
 

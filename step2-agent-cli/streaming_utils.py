@@ -91,9 +91,13 @@ def stream(user_input: str, intent: str, title_prompt: str, response_prompt: str
     fields = [("response", response_prompt)]
     return stream_with_fields(user_input, intent, title_prompt, fields)
 
-def stream_emotion(user_input: str, intent: str, title_prompt: str, emotion_prompt: str, message_prompt: str) -> Tuple[str, str, str]:
+def stream_emotion(user_input: str, intent: str, title_prompt: str, emotion_prompt: str, message_prompt: str) -> Tuple[str, str, str, str]:
+    confidence_prompt = (
+        f"다음 텍스트의 감정 분류에 대한 신뢰도를 0과 1 사이 소수로 숫자만 출력하세요. 텍스트: {user_input}"
+    )
     fields = [
         ("response", emotion_prompt),
-        ("message", message_prompt)
+        ("message", message_prompt),
+        ("confidence", confidence_prompt)
     ]
     return stream_with_fields(user_input, intent, title_prompt, fields)
