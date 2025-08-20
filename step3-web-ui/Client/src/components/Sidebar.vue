@@ -44,12 +44,14 @@
           :key="chatroom.id"
           :class="[
             'group relative flex items-center w-full text-left px-3 py-2 rounded-lg transition-colors duration-200 cursor-pointer',
-            isDark ? 'text-[#dedede] hover:bg-[#2a2a2a]' : 'text-gray-800 hover:bg-gray-200'
+            isDark ? 'text-[#dedede] hover:bg-[#2a2a2a]' : 'text-gray-800 hover:bg-gray-200',
+            isActiveChat(chatroom.id) ? (isDark ? 'bg-[#2a2a2a]' : 'bg-gray-200') : ''
           ]"
           @click="handleChatSelect(chatroom.id)"
           :title="chatroom.title"
           role="button"
           tabindex="0"
+          :aria-current="isActiveChat(chatroom.id) ? 'page' : undefined"
         >
           <span class="flex-1 truncate">
             {{ (isTyping && chatroom.id === typingTargetId) ? typingText : chatroom.title }}
@@ -98,6 +100,7 @@
 import ThemeToggle from './ThemeToggle.vue';
 import { useChatrooms } from '../state/chatroomsStore.js';
 import { ref, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { startTypingAnimation } from '../utils/typingAnimation.js';
 
 const props = defineProps({
@@ -108,6 +111,7 @@ const props = defineProps({
 const emit = defineEmits(['toggle', 'toggle-theme', 'select-chat']);
 
 const { chatrooms, loading, error, fetchChatrooms, createChat, deleteChatroom } = useChatrooms();
+const route = useRoute();
 
 const typingText = ref('');
 const isTyping = ref(false);
@@ -159,6 +163,7 @@ const handleCreateChat = async () => {
 };
 
 defineExpose({ refreshChatrooms: fetchChatrooms });
+const isActiveChat = (id) => route.params.id === id;
 
 watch(
   chatrooms,

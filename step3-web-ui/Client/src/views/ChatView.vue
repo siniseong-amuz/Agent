@@ -35,6 +35,9 @@
           class="w-full bg-[var(--surface)] rounded-4xl focus:outline-none focus:ring-0 text-[var(--text)] placeholder-[var(--subtext)] resize-none custom-scrollbar px-4 py-3 pr-12 text-base md:px-8 md:py-4.5 md:pr-16 md:text-lg"
           @input="handleResizeHeight"
           @keydown="handleKeydown"
+          @keyup="handleKeyup"
+          @compositionstart="handleCompositionStart"
+          @compositionend="handleCompositionEnd"
         />
         <button 
           @click="sendMessage"
@@ -74,6 +77,7 @@ const isSidebarOpen = ref(true)
 const isMobile = ref(false)
 const isDark = ref(false)
 const isSending = ref(false)
+const isComposing = ref(false)
 
 const { currentChatId, chatHistory, fetchChatHistory, clearChatHistory, addMessageToHistory, replaceLastMessage } = useChatHistory()
 const { chatrooms, createChat, fetchChatrooms } = useChatrooms()
@@ -168,12 +172,25 @@ const handleResizeHeight = () => {
 }
 
 const handleKeydown = (event) => {
+  if (isComposing.value) return
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
     if (!isSending.value) {
       sendMessage()
     }
   }
+}
+
+const handleKeyup = (event) => {
+  if (isComposing.value) return
+}
+
+const handleCompositionStart = () => {
+  isComposing.value = true
+}
+
+const handleCompositionEnd = () => {
+  isComposing.value = false
 }
 
 const selectChat = async (chatId) => {
@@ -196,6 +213,9 @@ const sendMessage = async () => {
   
   const userMessage = message.value.trim()
   message.value = ''
+  if (textareaRef.value) {
+    textareaRef.value.value = ''
+  }
   isSending.value = true
   
   nextTick(() => {
