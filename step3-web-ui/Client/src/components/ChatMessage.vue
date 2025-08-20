@@ -21,10 +21,13 @@
           <div class="text-xl text-[var(--text)] whitespace-pre-wrap">
             <template v-if="typeof parseAIResponse(message.result) === 'object' && parseAIResponse(message.result).type === 'translation'">
               <div class="translation-container">
-                <div class="original-text">원문: {{ parseAIResponse(message.result).original }}</div>
+                <div class="original-text">
+                  <span class="label">원문: </span>
+                  <span class="content">{{ parseAIResponse(message.result).original }}</span>
+                </div>
                 <div class="translation-text">
-                  번역문: 
-                  <span class="highlighted-text">{{ parseAIResponse(message.result).translation }}</span>
+                  <span class="label">번역문: </span>
+                  <span class="highlighted-text content">{{ parseAIResponse(message.result).translation }}</span>
                 </div>
               </div>
             </template>
