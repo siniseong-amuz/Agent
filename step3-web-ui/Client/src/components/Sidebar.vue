@@ -52,10 +52,8 @@
           tabindex="0"
         >
           <span class="flex-1 truncate">
-            <span v-if="isTyping && chatroom.id === chatrooms[0]?.id" class="typing-text">
-              {{ typingText }}<span class="cursor">|</span>
-            </span>
-            <span v-else>{{ chatroom.title }}</span>
+            {{ (isTyping && chatroom.id === typingTargetId) ? typingText : chatroom.title }}
+            <span v-if="isTyping && chatroom.id === typingTargetId" class="cursor">|</span>
           </span>
           <span
             class="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -99,7 +97,7 @@
 <script setup>
 import ThemeToggle from './ThemeToggle.vue';
 import { useChatrooms } from '../state/chatroomsStore.js';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { startTypingAnimation } from '../utils/typingAnimation.js';
 
 const props = defineProps({
@@ -113,6 +111,8 @@ const { chatrooms, loading, error, fetchChatrooms, createChat, deleteChatroom } 
 
 const typingText = ref('');
 const isTyping = ref(false);
+const typingTargetId = ref(null);
+let lastTitlesById = {};
 
 // 저장된 데이터가 있으면 즉시 사용하고, 없으면 API 호출
 const isInitialized = ref(false);
@@ -121,10 +121,12 @@ onMounted(() => {
   // 저장된 데이터가 있으면 즉시 사용
   if (chatrooms.value.length > 0) {
     isInitialized.value = true;
+    lastTitlesById = Object.fromEntries(chatrooms.value.map(r => [r.id, r.title]));
   } else {
     // 저장된 데이터가 없으면 API 호출 후 초기화 완료
     fetchChatrooms().then(() => {
       isInitialized.value = true;
+      lastTitlesById = Object.fromEntries(chatrooms.value.map(r => [r.id, r.title]));
     });
   }
 });
@@ -141,12 +143,14 @@ const handleCreateChat = async () => {
     startTypingAnimation(
       newChat.title,
       (text) => {
+        typingTargetId.value = newChat.id;
         isTyping.value = true;
         typingText.value = text;
       },
       () => {
         isTyping.value = false;
         typingText.value = '';
+        typingTargetId.value = null;
       },
       80,
       200
@@ -155,6 +159,39 @@ const handleCreateChat = async () => {
 };
 
 defineExpose({ refreshChatrooms: fetchChatrooms });
+
+watch(
+  chatrooms,
+  (rooms) => {
+    if (!Array.isArray(rooms) || rooms.length === 0) return;
+    const mapNow = Object.fromEntries(rooms.map(r => [r.id, r.title]));
+    for (const room of rooms) {
+      const prevTitle = lastTitlesById[room.id];
+      const currTitle = mapNow[room.id];
+      if (prevTitle && currTitle && prevTitle !== currTitle && currTitle !== 'new chat') {
+        typingTargetId.value = room.id;
+        isTyping.value = true;
+        typingText.value = '';
+        startTypingAnimation(
+          currTitle,
+          (text) => {
+            typingText.value = text;
+          },
+          () => {
+            isTyping.value = false;
+            typingText.value = '';
+            typingTargetId.value = null;
+          },
+          80,
+          0
+        );
+        break;
+      }
+    }
+    lastTitlesById = mapNow;
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>

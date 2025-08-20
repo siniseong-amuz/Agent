@@ -26,8 +26,11 @@ export function useChatrooms() {
   let unsubLoading;
   let unsubError;
 
-  const fetchChatrooms = async () => {
-    store.set(loadingAtom, true);
+  const fetchChatrooms = async (options = {}) => {
+    const { silent = false } = options;
+    if (!silent) {
+      store.set(loadingAtom, true);
+    }
     store.set(errorAtom, null);
 
     try {
@@ -50,7 +53,9 @@ export function useChatrooms() {
     } catch {
       store.set(errorAtom, '채팅방 목록을 불러올 수 없습니다.');
     } finally {
-      store.set(loadingAtom, false);
+      if (!silent) {
+        store.set(loadingAtom, false);
+      }
     }
   };
 

@@ -76,7 +76,7 @@ const isDark = ref(false)
 const isSending = ref(false)
 
 const { currentChatId, chatHistory, fetchChatHistory, clearChatHistory, addMessageToHistory, replaceLastMessage } = useChatHistory()
-const { chatrooms, createChat } = useChatrooms()
+const { chatrooms, createChat, fetchChatrooms } = useChatrooms()
 const apiUrl = import.meta.env.VITE_API_URL
 
 const currentChatTitle = computed(() => {
@@ -85,7 +85,6 @@ const currentChatTitle = computed(() => {
   return currentChat ? currentChat.title : 'New Chat'
 })
 
-// 새로고침 시 즉시 상태 복원
 const isInitialized = ref(false)
 
 watch(() => route.params.id, async (newChatId) => {
@@ -232,6 +231,7 @@ const sendMessage = async () => {
     if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
       const data = await res.json()
       replaceLastMessage({ input: data.input, intent: data.intent, result: data.result })
+      await fetchChatrooms({ silent: true })
     } else {
       replaceLastMessage({ input: userMessage, intent: 'error', result: '응답을 받을 수 없습니다.' })
     }
