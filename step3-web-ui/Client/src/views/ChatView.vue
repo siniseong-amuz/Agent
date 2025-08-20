@@ -38,7 +38,7 @@
         />
         <button 
           @click="sendMessage"
-          :disabled="!message.trim()"
+          :disabled="!message.trim() || isSending"
           :class="[
             'absolute bottom-3 rounded-full flex items-center justify-center transition-colors cursor-pointer right-3 w-8 h-8 md:right-4 md:bottom-4 md:w-10 md:h-10',
             isDark ? 'bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed' : 'bg-black hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed'
@@ -73,9 +73,11 @@ const textareaRef = ref(null)
 const isSidebarOpen = ref(true)
 const isMobile = ref(false)
 const isDark = ref(false)
+const isSending = ref(false)
 
-const { currentChatId, chatHistory, fetchChatHistory, clearChatHistory } = useChatHistory()
-const { chatrooms } = useChatrooms()
+const { currentChatId, chatHistory, fetchChatHistory, clearChatHistory, addMessageToHistory, replaceLastMessage } = useChatHistory()
+const { chatrooms, createChat } = useChatrooms()
+const apiUrl = import.meta.env.VITE_API_URL
 
 const currentChatTitle = computed(() => {
   if (!currentChatId.value) return 'New Chat'
@@ -169,7 +171,9 @@ const handleResizeHeight = () => {
 const handleKeydown = (event) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
-    sendMessage()
+    if (!isSending.value) {
+      sendMessage()
+    }
   }
 }
 
@@ -188,10 +192,12 @@ const selectChat = async (chatId) => {
 }
 
 const sendMessage = async () => {
+  if (isSending.value) return
   if (!message.value.trim()) return
   
   const userMessage = message.value.trim()
   message.value = ''
+  isSending.value = true
   
   nextTick(() => {
     const el = textareaRef.value
@@ -202,7 +208,38 @@ const sendMessage = async () => {
     }
   })
   
-  console.log('Sending message:', userMessage, 'to chat:', currentChatId.value)
+  try {
+    let roomId = currentChatId.value
+    if (!roomId) {
+      const created = await createChat()
+      if (created && created.id) {
+        await router.push(`/chat/${created.id}`)
+        await fetchChatHistory(created.id)
+        roomId = created.id
+      } else {
+        throw new Error('채팅방 생성 실패')
+      }
+    }
+    
+    addMessageToHistory({ input: userMessage, intent: '', result: '' })
+    
+    const res = await fetch(`${apiUrl}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ id: roomId, message: userMessage })
+    })
+    
+    if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
+      const data = await res.json()
+      replaceLastMessage({ input: data.input, intent: data.intent, result: data.result })
+    } else {
+      replaceLastMessage({ input: userMessage, intent: 'error', result: '응답을 받을 수 없습니다.' })
+    }
+  } catch (e) {
+    replaceLastMessage({ input: userMessage, intent: 'error', result: '오류가 발생했습니다.' })
+  } finally {
+    isSending.value = false
+  }
 }
 
 const toggleTheme = () => {

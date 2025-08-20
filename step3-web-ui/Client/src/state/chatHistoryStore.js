@@ -88,6 +88,18 @@ export function useChatHistory() {
     localStorage.setItem('chatHistory', JSON.stringify(updatedHistory));
   };
 
+  const replaceLastMessage = (message) => {
+    const currentHistory = store.get(chatHistoryAtom);
+    let updatedHistory;
+    if (currentHistory.length === 0) {
+      updatedHistory = [message];
+    } else {
+      updatedHistory = currentHistory.slice(0, currentHistory.length - 1).concat(message);
+    }
+    store.set(chatHistoryAtom, updatedHistory);
+    localStorage.setItem('chatHistory', JSON.stringify(updatedHistory));
+  };
+
   onMounted(() => {
     unsubHistory = store.sub(chatHistoryAtom, () => (chatHistory.value = store.get(chatHistoryAtom)));
     unsubChatId = store.sub(currentChatIdAtom, () => (currentChatId.value = store.get(currentChatIdAtom)));
@@ -114,6 +126,7 @@ export function useChatHistory() {
     historyError, 
     fetchChatHistory, 
     clearChatHistory,
-    addMessageToHistory
+    addMessageToHistory,
+    replaceLastMessage
   };
 }

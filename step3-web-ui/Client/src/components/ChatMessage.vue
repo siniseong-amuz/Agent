@@ -8,7 +8,7 @@
       </div>
     </div>
 
-    <div class="flex justify-start">
+    <div class="flex justify-start" v-if="message.result && (typeof message.result === 'object' ? Object.keys(message.result).length > 0 : String(message.result).trim() !== '')">
       <div class="max-w-[85%] lg:max-w-[75%]">
         <div class="space-y-3">
           <div v-if="message.intent" class="text-xs text-gray-500 dark:text-gray-400">
