@@ -87,14 +87,14 @@ class ChatService:
             intent = final_result.get("intent", "")
             result_data = final_result["result"]
             
-            if intent == "translation":
+            if isinstance(result_data, dict) and ("original" in result_data and "translation" in result_data):
                 response_data = {
                     "type": "translation",
                     "original": result_data.get("original", ""),
                     "translation": result_data.get("translation", "")
                 }
                 response_text = f"원문: {result_data.get('original', '')}\n번역문: {result_data.get('translation', '')}"
-            elif intent == "emotion":
+            elif isinstance(result_data, dict) and ("message" in result_data or "confidence" in result_data or intent in {"emotion", "감정 분석"}):
                 response_data = {
                     "emotion": result_data.get("response", ""),
                     "message": result_data.get("message", ""),
@@ -102,8 +102,8 @@ class ChatService:
                 }
                 response_text = f"{result_data.get('response', '')} - {result_data.get('message', '')} ({result_data.get('confidence', '')})"
             else:
-                response_data = result_data.get("response", "")
-                response_text = result_data.get("response", "")
+                response_data = result_data.get("response", result_data)
+                response_text = result_data.get("response", "") if isinstance(result_data, dict) else str(result_data)
             
             chat_record = await self.history_service.save_to_database(
                 room_id=room_id,

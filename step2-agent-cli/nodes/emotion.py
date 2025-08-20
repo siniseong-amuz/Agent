@@ -29,12 +29,12 @@ def get_emotion_node(llm=None) -> RunnableLambda:
 
         return {
             "input": user_input,
-            "title": title or "감정분석",
+            "title": (title or "감정분석").strip(),
             "intent": "감정 분석",
             "result": {
-                "response": emotion_response,
-                "message": message_response,
-                "confidence": confidence
+                "response": (emotion_response or "").strip(),
+                "message": (message_response or "").strip(),
+                "confidence": (confidence or "").strip()
             }
         }
 

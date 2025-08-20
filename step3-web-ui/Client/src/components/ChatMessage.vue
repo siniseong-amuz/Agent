@@ -29,8 +29,11 @@
               </div>
             </template>
             <template v-else-if="typeof message.result === 'object' && message.result.emotion && message.result.message">
-              <div class="text-gray-500 dark:text-gray-400 mb-1 whitespace-normal">감정 분석 결과: {{ message.result.emotion }}<template v-if="message.result.confidence"> (정확도: {{ formatConfidence(message.result.confidence) }})</template></div>
-              <div class="whitespace-pre-wrap">{{ message.result.message }}</div>
+              <div class="text-lg text-gray-500 dark:text-gray-400 mb-2 whitespace-normal">
+                <div>감정 분석 결과: {{ message.result.emotion }}</div>
+                <div v-if="message.result.confidence">정확도: {{ formatConfidence(message.result.confidence) }}</div>
+              </div>
+              <div class="whitespace-pre-wrap" v-html="renderHighlightedMessage(message.result.message)"></div>
             </template>
             <template v-else>
               <div class="whitespace-pre-wrap">{{ parseAIResponse(message.result) }}</div>
@@ -58,6 +61,23 @@ const formatConfidence = (value) => {
   if (num <= 1) return `${Math.round(num * 100)}%`;
   if (num <= 100) return `${Math.round(num)}%`;
   return value;
+};
+
+const escapeHtml = (text) =>
+  String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+const renderHighlightedMessage = (raw) => {
+  // Allow only <hl>...</hl> to be converted to highlighted span; escape all else
+  const escaped = escapeHtml(raw)
+    // Temporarily unescape allowed tags placeholders
+    .replace(/&lt;hl&gt;/g, '<hl>')
+    .replace(/&lt;\/hl&gt;/g, '</hl>');
+  const replaced = escaped
+    .replace(/<hl>([\s\S]*?)<\/hl>/g, '<span class="highlighted-text">$1</span>');
+  return replaced;
 };
 </script>
 

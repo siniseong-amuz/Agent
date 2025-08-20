@@ -67,6 +67,7 @@ import Footer from '../components/Footer.vue'
 import ChatArea from '../components/ChatArea.vue'
 import { useChatHistory } from '../state/chatHistoryStore.js'
 import { useChatrooms } from '../state/chatroomsStore.js'
+import { startTypingAnimation, stopTypingAnimation } from '../utils/typingAnimation.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -78,6 +79,7 @@ const isMobile = ref(false)
 const isDark = ref(false)
 const isSending = ref(false)
 const isComposing = ref(false)
+let typingIntervalId = null
 
 const { currentChatId, chatHistory, fetchChatHistory, clearChatHistory, addMessageToHistory, replaceLastMessage } = useChatHistory()
 const { chatrooms, createChat, fetchChatrooms } = useChatrooms()
@@ -139,6 +141,10 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
   document.body.style.overflow = ''
+  if (typingIntervalId) {
+    stopTypingAnimation(typingIntervalId)
+    typingIntervalId = null
+  }
 })
 
 const handleResizeHeight = () => {
@@ -250,8 +256,44 @@ const sendMessage = async () => {
     
     if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
       const data = await res.json()
-      replaceLastMessage({ input: data.input, intent: data.intent, result: data.result })
-      await fetchChatrooms({ silent: true })
+
+      const intent = data.intent
+      const fullResult = data.result
+
+      if (typingIntervalId) {
+        stopTypingAnimation(typingIntervalId)
+        typingIntervalId = null
+      }
+
+      if (intent === '번역' && fullResult && typeof fullResult === 'object') {
+        replaceLastMessage({ input: data.input, intent: data.intent, result: { type: 'translation', original: fullResult.original || '', translation: '' } })
+        typingIntervalId = startTypingAnimation(String(fullResult.translation || ''), (partial) => {
+          replaceLastMessage({ input: data.input, intent: data.intent, result: { type: 'translation', original: fullResult.original || '', translation: partial } })
+        }, async () => {
+          replaceLastMessage({ input: data.input, intent: data.intent, result: fullResult })
+          await fetchChatrooms({ silent: true })
+          typingIntervalId = null
+        }, 12)
+      } else if (intent === '감정 분석' && fullResult && typeof fullResult === 'object') {
+        replaceLastMessage({ input: data.input, intent: data.intent, result: { emotion: fullResult.emotion || '', message: '', confidence: fullResult.confidence || '' } })
+        typingIntervalId = startTypingAnimation(String(fullResult.message || ''), (partial) => {
+          replaceLastMessage({ input: data.input, intent: data.intent, result: { emotion: fullResult.emotion || '', message: partial, confidence: fullResult.confidence || '' } })
+        }, async () => {
+          replaceLastMessage({ input: data.input, intent: data.intent, result: fullResult })
+          await fetchChatrooms({ silent: true })
+          typingIntervalId = null
+        }, 12)
+      } else {
+        const fullText = typeof fullResult === 'string' ? fullResult : (fullResult && fullResult.response) ? String(fullResult.response) : ''
+        replaceLastMessage({ input: data.input, intent: data.intent, result: '' })
+        typingIntervalId = startTypingAnimation(String(fullText), (partial) => {
+          replaceLastMessage({ input: data.input, intent: data.intent, result: partial })
+        }, async () => {
+          replaceLastMessage({ input: data.input, intent: data.intent, result: fullResult })
+          await fetchChatrooms({ silent: true })
+          typingIntervalId = null
+        }, 12)
+      }
     } else {
       replaceLastMessage({ input: userMessage, intent: 'error', result: '응답을 받을 수 없습니다.' })
     }
