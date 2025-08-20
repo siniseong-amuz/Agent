@@ -89,10 +89,11 @@ class ChatService:
             
             if intent == "translation":
                 response_data = {
+                    "type": "translation",
                     "original": result_data.get("original", ""),
                     "translation": result_data.get("translation", "")
                 }
-                response_text = result_data.get("translation", "")
+                response_text = f"원문: {result_data.get('original', '')}\n번역문: {result_data.get('translation', '')}"
             elif intent == "emotion":
                 response_data = {
                     "emotion": result_data.get("response", ""),

@@ -58,6 +58,8 @@ export function useChatHistory() {
     store.set(historyErrorAtom, null);
   };
 
+
+
   onMounted(() => {
     unsubHistory = store.sub(chatHistoryAtom, () => (chatHistory.value = store.get(chatHistoryAtom)));
     unsubChatId = store.sub(currentChatIdAtom, () => (currentChatId.value = store.get(currentChatIdAtom)));
@@ -83,6 +85,6 @@ export function useChatHistory() {
     historyLoading, 
     historyError, 
     fetchChatHistory, 
-    clearChatHistory 
+    clearChatHistory
   };
 }
