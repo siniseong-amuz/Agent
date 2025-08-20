@@ -24,8 +24,8 @@ def get_flight_node(llm=None) -> RunnableLambda:
 
         return {
             "input": user_input,
-            "title": title or "flight",
-            "intent": "flight",
+            "title": title or "비행 시간",
+            "intent": "비행 시간",
             "result": {"response": full_response}
         }
 

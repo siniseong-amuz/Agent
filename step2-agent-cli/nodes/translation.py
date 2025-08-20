@@ -25,7 +25,7 @@ def get_translation_node(llm=None) -> RunnableLambda:
         return {
             "input": user_input,
             "title": title or "Translation",
-            "intent": "translation",
+            "intent": "번역",
             "result": {
                 "original": original,
                 "translation": translation

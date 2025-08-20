@@ -25,7 +25,7 @@ def get_summary_node(llm=None) -> RunnableLambda:
         return {
             "input": user_input,
             "title": title or "요약",
-            "intent": "summary",
+            "intent": "요약",
             "result": {"response": full_response}
         }
 

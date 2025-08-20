@@ -25,7 +25,7 @@ def get_talk_node(llm=None) -> RunnableLambda:
         return {
             "input": user_input,
             "title": title or "대화",
-            "intent": "일상대화",
+            "intent": "일상 대화",
             "result": {"response": full_response}
         }
 
