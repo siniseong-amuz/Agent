@@ -9,7 +9,7 @@
       :is-mobile="isMobile" 
       :is-dark="isDark" 
     />
-    <Header @toggle-sidebar="toggleSidebar" :is-mobile="isMobile" :is-dark="isDark" @toggle-theme="toggleTheme" />
+    <Header @toggle-sidebar="toggleSidebar" :is-mobile="isMobile" :is-dark="isDark" @toggle-theme="toggleTheme" :title="currentChatTitle" />
     
     <div class="flex-1 flex flex-col pt-8">
       <div v-if="!currentChatId || (currentChatId && (!chatHistory || chatHistory.length === 0))" class="flex-1 flex items-center justify-center flex-col px-4">
@@ -54,12 +54,13 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, onUnmounted, watch } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted, watch, computed } from 'vue'
 import Header from './components/Header.vue'
 import Sidebar from './components/Sidebar.vue'
 import Footer from './components/Footer.vue'
 import ChatArea from './components/ChatArea.vue'
 import { useChatHistory } from './state/chatHistoryStore.js'
+import { useChatrooms } from './state/chatroomsStore.js'
 
 const message = ref('')
 const textareaRef = ref(null)
@@ -68,6 +69,13 @@ const isMobile = ref(false)
 const isDark = ref(false)
 
 const { currentChatId, chatHistory, fetchChatHistory, clearChatHistory } = useChatHistory()
+const { chatrooms } = useChatrooms()
+
+const currentChatTitle = computed(() => {
+  if (!currentChatId.value) return 'New Chat'
+  const currentChat = chatrooms.value.find(chat => chat.id === currentChatId.value)
+  return currentChat ? currentChat.title : 'New Chat'
+})
 
 const checkMobile = () => {
   const wasMobile = isMobile.value
