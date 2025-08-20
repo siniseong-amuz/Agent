@@ -28,6 +28,9 @@
                 </div>
               </div>
             </template>
+            <template v-else-if="typeof message.result === 'object' && message.result.emotion && message.result.message">
+              <div class="whitespace-pre-wrap">{{ message.result.message }}</div>
+            </template>
             <template v-else>
               {{ parseAIResponse(message.result) }}
             </template>
