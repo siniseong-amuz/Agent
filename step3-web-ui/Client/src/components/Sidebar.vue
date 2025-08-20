@@ -18,7 +18,7 @@
           'flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg',
           isDark ? 'text-[#dedede] hover:bg-[#2a2a2a]' : 'text-gray-800 hover:bg-gray-200'
         ]"
-        @click="createChat"
+        @click="handleCreateChat"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
           <path d="M12.75 5a.75.75 0 0 0-1.5 0v6.25H5a.75.75 0 0 0 0 1.5h6.25V19a.75.75 0 0 0 1.5 0v-6.25H19a.75.75 0 0 0 0-1.5h-6.25V5Z" />
@@ -42,7 +42,7 @@
             'group relative flex items-center w-full text-left px-3 py-2 rounded-lg transition-colors duration-200 cursor-pointer',
             isDark ? 'text-[#dedede] hover:bg-[#2a2a2a]' : 'text-gray-800 hover:bg-gray-200'
           ]"
-          @click="$emit('select-chat', chatroom.id)"
+          @click="handleChatSelect(chatroom.id)"
           :title="chatroom.title"
           role="button"
           tabindex="0"
@@ -72,7 +72,6 @@
         isDark ? 'bg-[#2a2a2a] text-[#979797] hover:bg-[#333]' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
       ]"
       @click="$emit('toggle')"
-      :aria-label="open ? '사이드바 닫기' : '사이드바 열기'"
     >
       <svg v-if="open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
         <path d="M5 12.75h14a.75.75 0 0 0 0-1.5H5a.75.75 0 0 0 0 1.5Z" />
@@ -97,9 +96,20 @@ const props = defineProps({
   isDark: { type: Boolean, default: false }
 });
 
-defineEmits(['toggle', 'toggle-theme', 'select-chat']);
+const emit = defineEmits(['toggle', 'toggle-theme', 'select-chat']);
 
 const { chatrooms, loading, error, fetchChatrooms, createChat, deleteChatroom } = useChatrooms();
+
+const handleChatSelect = (chatId) => {
+  emit('select-chat', chatId);
+};
+
+const handleCreateChat = async () => {
+  await createChat();
+  if (chatrooms.value.length > 0) {
+    emit('select-chat', chatrooms.value[0].id);
+  }
+};
 
 defineExpose({ refreshChatrooms: fetchChatrooms });
 </script>

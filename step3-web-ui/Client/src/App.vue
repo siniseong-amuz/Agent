@@ -1,12 +1,27 @@
 <template>
   <div class="min-h-screen bg-[var(--bg)] flex flex-col pb-32 transition-[padding] duration-300 pl-0 md:pl-0" 
        :class="isSidebarOpen && !isMobile ? 'md:pl-[260px]' : ''">
-    <Sidebar :open="isSidebarOpen" @toggle="toggleSidebar" @toggle-theme="toggleTheme" :is-mobile="isMobile" :is-dark="isDark" />
+    <Sidebar 
+      :open="isSidebarOpen" 
+      @toggle="toggleSidebar" 
+      @toggle-theme="toggleTheme" 
+      @select-chat="selectChat"
+      :is-mobile="isMobile" 
+      :is-dark="isDark" 
+    />
     <Header @toggle-sidebar="toggleSidebar" :is-mobile="isMobile" :is-dark="isDark" @toggle-theme="toggleTheme" />
-    <div class="flex-1 flex items-center justify-center flex-col pt-24 px-4">
-      <h1 class="font-semibold mb-2 gradient-text text-3xl md:text-4xl">안녕하세요, siniseong님</h1>
-      <h1 class="font-medium text-gray-600 dark:text-[#7c7c7c] mb-12 text-3xl md:text-4xl">무엇을 도와드릴까요?</h1>
+    
+    <div class="flex-1 flex flex-col pt-16">
+      <div v-if="!currentChatId || (currentChatId && (!chatHistory || chatHistory.length === 0))" class="flex-1 flex items-center justify-center flex-col px-4">
+        <h1 class="font-semibold mb-2 gradient-text text-3xl md:text-4xl">안녕하세요, siniseong님</h1>
+        <h1 class="font-medium text-gray-600 dark:text-[#7c7c7c] mb-12 text-3xl md:text-4xl">무엇을 도와드릴까요?</h1>
+      </div>
+      
+      <div v-else class="flex-1 flex flex-col">
+        <ChatArea />
+      </div>
     </div>
+    
     <div class="fixed left-0 right-0 bottom-14 w-full flex items-start gap-2 mx-auto transition-[padding,max-width] duration-300 px-4 max-w-full md:max-w-[56rem] md:pl-0"
          :class="isSidebarOpen && !isMobile ? 'md:max-w-[72rem] md:pl-[260px]' : ''">
       <div class="relative flex-1">
@@ -14,16 +29,18 @@
           ref="textareaRef"
           v-model="message"
           rows="1"
-          placeholder="오늘은 어떤걸 도와드릴까요?"
-          class="w-full bg-[var(--surface)] rounded-4xl focus:outline-none focus:ring-0 text-[var(--text)] placeholder-[var(--subtext)] resize-none custom-scrollbar px-4 py-3 pr-12 text-base md:px-8 md:py-4.5 md:pr-16 md:text-lg"
+          :placeholder="currentChatId ? '메시지를 입력하세요...' : '새 채팅을 시작하려면 사이드바에서 새 채팅을 클릭하세요'"
+          :disabled="!currentChatId"
+          class="w-full bg-[var(--surface)] rounded-4xl focus:outline-none focus:ring-0 text-[var(--text)] placeholder-[var(--subtext)] resize-none custom-scrollbar px-4 py-3 pr-12 text-base md:px-8 md:py-4.5 md:pr-16 md:text-lg disabled:opacity-50 disabled:cursor-not-allowed"
           @input="handleResizeHeight"
           @keydown="handleKeydown"
         />
         <button 
           @click="sendMessage"
+          :disabled="!currentChatId || !message.trim()"
           :class="[
             'absolute bottom-3 rounded-full flex items-center justify-center transition-colors cursor-pointer right-3 w-8 h-8 md:right-4 md:bottom-4 md:w-10 md:h-10',
-            isDark ? 'bg-gray-200 hover:bg-gray-300' : 'bg-black hover:bg-gray-800'
+            isDark ? 'bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed' : 'bg-black hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed'
           ]"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" :class="['w-4 h-4 md:w-5 md:h-5', isDark ? 'text-gray-800' : 'text-white']">
@@ -42,12 +59,16 @@ import { ref, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import Header from './components/Header.vue'
 import Sidebar from './components/Sidebar.vue'
 import Footer from './components/Footer.vue'
+import ChatArea from './components/ChatArea.vue'
+import { useChatHistory } from './state/chatHistoryStore.js'
 
 const message = ref('')
 const textareaRef = ref(null)
 const isSidebarOpen = ref(true)
 const isMobile = ref(false)
 const isDark = ref(false)
+
+const { currentChatId, chatHistory, fetchChatHistory, clearChatHistory } = useChatHistory()
 
 const checkMobile = () => {
   const wasMobile = isMobile.value
@@ -127,9 +148,22 @@ const handleKeydown = (event) => {
   }
 }
 
-const sendMessage = () => {
-  if (!message.value.trim()) return
+const selectChat = async (chatId) => {
+  if (chatId === currentChatId.value) return
+  
+  if (isMobile.value) {
+    isSidebarOpen.value = false
+  }
+  
+  await fetchChatHistory(chatId)
+}
+
+const sendMessage = async () => {
+  if (!message.value.trim() || !currentChatId.value) return
+  
+  const userMessage = message.value.trim()
   message.value = ''
+  
   nextTick(() => {
     const el = textareaRef.value
     if (el) {
@@ -138,6 +172,8 @@ const sendMessage = () => {
       el.scrollTop = 0
     }
   })
+  
+  console.log('Sending message:', userMessage, 'to chat:', currentChatId.value)
 }
 
 const toggleTheme = () => {
