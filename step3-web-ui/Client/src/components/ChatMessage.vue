@@ -2,7 +2,7 @@
   <div class="flex flex-col space-y-4">
     <div class="flex justify-end">
       <div class="max-w-[85%] lg:max-w-[75%]">
-        <div class="bg-blue-500 text-white rounded-3xl px-4 py-2">
+        <div class="bg-[var(--surface)] text-[var(--text)] rounded-3xl px-4 py-2">
           <p class="text-lg whitespace-pre-wrap">{{ message.input }}</p>
         </div>
         <div class="text-xs text-gray-500 mt-1 text-right">
