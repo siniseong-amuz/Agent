@@ -19,7 +19,7 @@
           </div>
           
           <div class="text-xl text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
-            {{ message.result }}
+            {{ parseAIResponse(message.result) }}
           </div>
         </div>
         <div class="text-xs text-gray-500 mt-1">
@@ -31,6 +31,8 @@
 </template>
 
 <script setup>
+import { parseAIResponse } from '../utils/responseParser.js';
+
 const props = defineProps({
   message: {
     type: Object,
