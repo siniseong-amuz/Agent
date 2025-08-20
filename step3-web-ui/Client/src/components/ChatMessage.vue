@@ -5,9 +5,6 @@
         <div class="bg-[var(--surface)] text-[var(--text)] rounded-3xl px-4 py-2">
           <p class="text-lg whitespace-pre-wrap">{{ message.input }}</p>
         </div>
-        <div class="text-xs text-gray-500 mt-1 text-right">
-          {{ formatTime(message.timestamp) }}
-        </div>
       </div>
     </div>
 
@@ -36,9 +33,6 @@
             </template>
           </div>
         </div>
-        <div class="text-xs text-gray-500 mt-1">
-          {{ formatTime(message.timestamp) }}
-        </div>
       </div>
     </div>
   </div>
@@ -53,30 +47,6 @@ const props = defineProps({
     required: true
   }
 });
-
-const formatTime = (timestamp) => {
-  if (!timestamp) return '';
-  
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diffInHours = (now - date) / (1000 * 60 * 60);
-  
-  if (diffInHours < 24) {
-    return date.toLocaleTimeString('ko-KR', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false 
-    });
-  } else {
-    return date.toLocaleDateString('ko-KR', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false 
-    });
-  }
-};
 </script>
 
 <style scoped>
